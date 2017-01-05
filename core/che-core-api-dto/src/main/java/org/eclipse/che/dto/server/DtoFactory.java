@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author andrew00x
  */
-public final class DtoFactory {
+public class DtoFactory {
     private static final Gson gson = new GsonBuilder().serializeNulls().create();
 
     private static final LoadingCache<Type, ParameterizedType> listTypeCache = CacheBuilder.newBuilder().concurrencyLevel(16).build(
