@@ -20,6 +20,8 @@ import org.eclipse.che.api.system.shared.event.service.SystemServiceItemStoppedE
 import org.eclipse.che.api.system.shared.event.service.SystemServiceStoppedEvent;
 import org.testng.annotations.Test;
 
+import java.util.EnumSet;
+
 import static org.eclipse.che.api.system.shared.SystemStatus.PREPARING_TO_SHUTDOWN;
 import static org.eclipse.che.api.system.shared.SystemStatus.RUNNING;
 import static org.testng.Assert.assertEquals;
@@ -73,5 +75,14 @@ public class DtoConverterTest {
         assertEquals(dto.getItem(), event.getItem());
         assertEquals(dto.getCurrent(), event.getCurrent());
         assertEquals(dto.getTotal(), event.getTotal());
+    }
+
+    @Test
+    public void allEventTypesAreHandled() {
+        EnumSet<EventType> handled = EnumSet.of(EventType.STATUS_CHANGED,
+                                                EventType.STOPPING_SERVICE,
+                                                EventType.SERVICE_ITEM_STOPPED,
+                                                EventType.SERVICE_STOPPED);
+        assertEquals(handled, EnumSet.allOf(EventType.class));
     }
 }
