@@ -10,12 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.assistedinject.Assisted;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.ide.api.editor.annotation.AnnotationModel;
 import org.eclipse.che.ide.api.editor.codeassist.CodeAssistProcessor;
 import org.eclipse.che.ide.api.editor.editorconfig.DefaultTextEditorConfiguration;
@@ -37,48 +34,32 @@ public class LanguageServerEditorConfiguration extends DefaultTextEditorConfigur
 
     public static final int INITIAL_DOCUMENT_VERSION = 0;
 
-    private final ServerCapabilities                       serverCapabilities;
-    private final AnnotationModel                          annotationModel;
-    private final ReconcilerWithAutoSave                   reconciler;
+    private final AnnotationModel annotationModel;
+    private final ReconcilerWithAutoSave reconciler;
     private final LanguageServerCodeassistProcessorFactory codeAssistProcessorFactory;
-    private final SignatureHelpProvider                    signatureHelpProvider;
-    private       LanguageServerFormatter                  formatter;
+    private final SignatureHelpProvider signatureHelpProvider;
+    private LanguageServerFormatter formatter;
 
     @Inject
     public LanguageServerEditorConfiguration(LanguageServerCodeassistProcessorFactory codeAssistProcessor,
-                                             Provider<DocumentPositionMap> docPositionMapProvider,
-                                             LanguageServerAnnotationModelFactory annotationModelFactory,
-                                             LanguageServerReconcileStrategyFactory reconcileStrategyProviderFactory,
-                                             LanguageServerFormatterFactory formatterFactory,
-                                             LanguageServerSignatureHelpFactory signatureHelpFactory,
-                                             @Assisted ServerCapabilities serverCapabilities) {
+                    Provider<DocumentPositionMap> docPositionMapProvider, LanguageServerAnnotationModelFactory annotationModelFactory,
+                    LanguageServerReconcileStrategyFactory reconcileStrategyProviderFactory,
+                    LanguageServerFormatterFactory formatterFactory, LanguageServerSignatureHelpFactory signatureHelpFactory) {
         codeAssistProcessorFactory = codeAssistProcessor;
-        if ((serverCapabilities.isDocumentFormattingProvider() != null && serverCapabilities.isDocumentFormattingProvider()) ||
-            (serverCapabilities.isDocumentRangeFormattingProvider() != null && serverCapabilities.isDocumentRangeFormattingProvider()) ||
-            serverCapabilities.getDocumentOnTypeFormattingProvider() != null) {
-            this.formatter = formatterFactory.create(serverCapabilities);
-        }
-        this.serverCapabilities = serverCapabilities;
+        this.formatter = formatterFactory.create();
         this.annotationModel = annotationModelFactory.get(docPositionMapProvider.get());
 
         this.reconciler = new ReconcilerWithAutoSave(DocumentPartitioner.DEFAULT_CONTENT_TYPE, getPartitioner());
-        reconciler.addReconcilingStrategy(DocumentPartitioner.DEFAULT_CONTENT_TYPE, reconcileStrategyProviderFactory.build(serverCapabilities));
-        if (serverCapabilities.getSignatureHelpProvider() != null) {
-            signatureHelpProvider = signatureHelpFactory.create(serverCapabilities);
-        } else {
-            signatureHelpProvider = null;
-        }
+        reconciler.addReconcilingStrategy(DocumentPartitioner.DEFAULT_CONTENT_TYPE,
+                        reconcileStrategyProviderFactory.build());
+        signatureHelpProvider = signatureHelpFactory.create();
     }
 
     @Override
     public Map<String, CodeAssistProcessor> getContentAssistantProcessors() {
-        if (serverCapabilities.getCompletionProvider() != null) {
             Map<String, CodeAssistProcessor> map = new HashMap<>();
-            map.put(DocumentPartitioner.DEFAULT_CONTENT_TYPE, codeAssistProcessorFactory.create(serverCapabilities));
+            map.put(DocumentPartitioner.DEFAULT_CONTENT_TYPE, codeAssistProcessorFactory.create());
             return map;
-        }
-
-        return null;
     }
 
     @Override
@@ -94,10 +75,6 @@ public class LanguageServerEditorConfiguration extends DefaultTextEditorConfigur
     @Override
     public ContentFormatter getContentFormatter() {
         return formatter;
-    }
-
-    public ServerCapabilities getServerCapabilities() {
-        return serverCapabilities;
     }
 
     @Override

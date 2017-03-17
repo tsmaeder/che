@@ -69,11 +69,6 @@ public class HoverProvider implements OrionHoverHandler {
             return null;
         }
 
-        LanguageServerEditorConfiguration configuration = (LanguageServerEditorConfiguration)editor.getConfiguration();
-        if (configuration.getServerCapabilities().isHoverProvider() == null || !configuration.getServerCapabilities().isHoverProvider()) {
-            return null;
-        }
-
         Document document = editor.getDocument();
         TextDocumentPositionParamsDTO paramsDTO = helper.createTDPP(document, context.getOffset());
 

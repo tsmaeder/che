@@ -17,5 +17,5 @@ import io.typefox.lsapi.ServerCapabilities;
  */
 public interface LanguageServerFormatterFactory {
 
-    LanguageServerFormatter create(ServerCapabilities capabilities);
+    LanguageServerFormatter create();
 }

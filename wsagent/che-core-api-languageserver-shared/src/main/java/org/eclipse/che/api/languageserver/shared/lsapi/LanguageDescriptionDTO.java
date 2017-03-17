@@ -20,7 +20,7 @@ public interface LanguageDescriptionDTO extends LanguageDescription {
 	/**
      * The language id.
      */
-    void setLanguageId(String id);
+    void setLanguageId(String id); 
     
     /**
      * The optional content types this language is associated with.

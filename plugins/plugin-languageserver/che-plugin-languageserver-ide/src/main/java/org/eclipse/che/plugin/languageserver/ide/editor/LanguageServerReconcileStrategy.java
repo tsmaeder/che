@@ -10,20 +10,16 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-import io.typefox.lsapi.TextDocumentSyncKind;
-
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.ide.api.editor.document.Document;
 import org.eclipse.che.ide.api.editor.events.DocumentChangeEvent;
 import org.eclipse.che.ide.api.editor.events.DocumentChangeHandler;
 import org.eclipse.che.ide.api.editor.reconciler.DirtyRegion;
 import org.eclipse.che.ide.api.editor.reconciler.ReconcilingStrategy;
 import org.eclipse.che.ide.api.editor.text.Region;
-import org.eclipse.che.plugin.languageserver.ide.editor.sync.TextDocumentSynchronize;
 import org.eclipse.che.plugin.languageserver.ide.editor.sync.TextDocumentSynchronizeFactory;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 
 /**
  * Responsible for document synchronization
@@ -33,14 +29,13 @@ import org.eclipse.che.plugin.languageserver.ide.editor.sync.TextDocumentSynchro
 public class LanguageServerReconcileStrategy implements ReconcilingStrategy {
 
     private int version = 0;
-    private final TextDocumentSynchronize synchronize;
+    private TextDocumentSynchronizeFactory synchronizeFactory;
+    private LanguageServerRegistry registry;
 
     @Inject
-    public LanguageServerReconcileStrategy(TextDocumentSynchronizeFactory synchronizeFactory,
-                                           @Assisted ServerCapabilities serverCapabilities) {
-
-        TextDocumentSyncKind documentSync = serverCapabilities.getTextDocumentSync();
-        synchronize = synchronizeFactory.getSynchronize(documentSync);
+    public LanguageServerReconcileStrategy(TextDocumentSynchronizeFactory synchronizeFactory, LanguageServerRegistry registry) {
+        this.synchronizeFactory= synchronizeFactory;
+        this.registry= registry;
     }
 
     @Override
@@ -48,7 +43,8 @@ public class LanguageServerReconcileStrategy implements ReconcilingStrategy {
         document.getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE, new DocumentChangeHandler() {
             @Override
             public void onDocumentChange(DocumentChangeEvent event) {
-                synchronize.syncTextDocument(event, ++version);
+                ServerCapabilities capabilities = registry.getCapabilities(event.getDocument().getDocument().getFile().getLocation().toString());
+                synchronizeFactory.getSynchronize(capabilities.getTextDocumentSync()).syncTextDocument(event, ++version);
             }
         });
     }

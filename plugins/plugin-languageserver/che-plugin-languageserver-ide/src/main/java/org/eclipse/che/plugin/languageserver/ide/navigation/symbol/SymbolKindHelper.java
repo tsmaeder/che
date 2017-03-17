@@ -29,8 +29,7 @@ import java.util.Map;
 @Singleton
 public class SymbolKindHelper {
 
-
-    private final LanguageServerResources resources;
+    private final LanguageServerResources      resources;
 
     private final Map<SymbolKind, SVGResource> iconMap = new HashMap<>();
 
@@ -38,7 +37,7 @@ public class SymbolKindHelper {
 
     public SymbolKindHelper(LanguageServerResources resources) {
         this.resources = resources;
-        //TODO Replace markWarning() image with proper images
+        // TODO Replace markWarning() image with proper images
         iconMap.put(SymbolKind.Method, resources.methodItem());
         iconMap.put(SymbolKind.Function, resources.textItem());
         iconMap.put(SymbolKind.Constructor, resources.textItem());
@@ -68,41 +67,42 @@ public class SymbolKindHelper {
 
     public String from(SymbolKind kind) {
         switch (kind) {
-            case Method:
-                return "method";
-            case Function:
-                return "function";
-            case Constructor:
-                return "constructor";
-            case Variable:
-                return "variable";
-            case Class:
-                return "class";
-            case Interface:
-                return "interface";
-            case Namespace:
-                return "namespace";
-            case Package:
-                return "package";
-            case Module:
-                return "module";
-            case Property:
-                return "property";
-            case Enum:
-                return "enum";
-            case String:
-                return "string";
-            case File:
-                return "file";
-            case Array:
-                return "array";
-            case Number:
-                return "number";
-            case Boolean:
-                return "boolean";
+        case Method:
+            return "method";
+        case Function:
+            return "function";
+        case Constructor:
+            return "constructor";
+        case Variable:
+            return "variable";
+        case Class:
+            return "class";
+        case Interface:
+            return "interface";
+        case Namespace:
+            return "namespace";
+        case Package:
+            return "package";
+        case Module:
+            return "module";
+        case Property:
+            return "property";
+        case Enum:
+            return "enum";
+        case String:
+            return "string";
+        case File:
+            return "file";
+        case Array:
+            return "array";
+        case Number:
+            return "number";
+        case Boolean:
+            return "boolean";
+        default:
+            return "property";
         }
-        return "property";
-    }
 
+    }
 
 }

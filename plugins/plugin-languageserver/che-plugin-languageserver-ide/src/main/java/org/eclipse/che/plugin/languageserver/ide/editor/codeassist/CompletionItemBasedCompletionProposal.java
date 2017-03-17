@@ -16,7 +16,6 @@ import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
-import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.RangeDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentIdentifierDTO;
@@ -49,17 +48,17 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
     private final TextDocumentIdentifierDTO documentId;
     private final LanguageServerResources   resources;
     private final Icon                      icon;
-    private final ServerCapabilities        serverCapabilities;
     private final List<Match>               highlights;
     private final int                       offset;
     private boolean resolved;
+    private boolean canResolve;
 
     CompletionItemBasedCompletionProposal(CompletionItemDTO completionItem,
                                           TextDocumentServiceClient documentServiceClient,
                                           TextDocumentIdentifierDTO documentId,
                                           LanguageServerResources resources,
                                           Icon icon,
-                                          ServerCapabilities serverCapabilities,
+                                          boolean canResolve,
                                           List<Match> highlights,
                                           int offset) {
         this.completionItem = completionItem;
@@ -67,7 +66,7 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
         this.documentId = documentId;
         this.resources = resources;
         this.icon = icon;
-        this.serverCapabilities = serverCapabilities;
+        this.canResolve = canResolve;
         this.highlights = highlights;
         this.offset = offset;
         this.resolved = false;
@@ -168,10 +167,7 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
     }
 
     private boolean canResolve() {
-        return !resolved &&
-               serverCapabilities.getCompletionProvider() != null &&
-               serverCapabilities.getCompletionProvider().getResolveProvider() != null &&
-               serverCapabilities.getCompletionProvider().getResolveProvider();
+        return !resolved && canResolve;
     }
 
     private Promise<CompletionItemDTO> resolve() {

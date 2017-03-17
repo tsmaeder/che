@@ -11,7 +11,6 @@
 package org.eclipse.che.plugin.languageserver.ide.editor.codeassist;
 
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionListDTO;
@@ -27,6 +26,7 @@ import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.ide.filters.FuzzyMatches;
 import org.eclipse.che.ide.filters.Match;
 import org.eclipse.che.plugin.languageserver.ide.LanguageServerResources;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
 
@@ -43,24 +43,24 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
     private final DtoBuildHelper            dtoBuildHelper;
     private final LanguageServerResources   resources;
     private final CompletionImageProvider   imageProvider;
-    private final ServerCapabilities serverCapabilities;
     private final TextDocumentServiceClient documentServiceClient;
     private final FuzzyMatches fuzzyMatches;
     private String lastErrorMessage;
     private final LatestCompletionResult    latestCompletionResult;
+    private LanguageServerRegistry registry;
 
     @Inject
     public LanguageServerCodeAssistProcessor(TextDocumentServiceClient documentServiceClient,
+                                             LanguageServerRegistry registry,
                                              DtoBuildHelper dtoBuildHelper,
                                              LanguageServerResources resources,
                                              CompletionImageProvider imageProvider,
-                                             @Assisted ServerCapabilities serverCapabilities,
                                              FuzzyMatches fuzzyMatches) {
         this.documentServiceClient = documentServiceClient;
+        this.registry= registry;
         this.dtoBuildHelper = dtoBuildHelper;
         this.resources = resources;
         this.imageProvider = imageProvider;
-        this.serverCapabilities = serverCapabilities;
         this.fuzzyMatches = fuzzyMatches;
         this.latestCompletionResult = new LatestCompletionResult();
     }
@@ -69,20 +69,25 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
     public void computeCompletionProposals(TextEditor editor, final int offset, final boolean triggered, final CodeAssistCallback callback) {
         this.lastErrorMessage = null;
 
+        ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile().getLocation().toString());
         TextDocumentPositionParamsDTO documentPosition = dtoBuildHelper.createTDPP(editor.getDocument(), offset);
         final TextDocumentIdentifierDTO documentId = documentPosition.getTextDocument();
         String currentLine = editor.getDocument().getLineContent(documentPosition.getPosition().getLine());
         final String currentWord = getCurrentWord(currentLine, documentPosition.getPosition().getCharacter());
 
+        boolean canResolve= capabilities.getCompletionProvider() != null &&
+                        capabilities.getCompletionProvider().getResolveProvider() != null &&
+                        capabilities.getCompletionProvider().getResolveProvider();
+        
         if (!triggered && latestCompletionResult.isGoodFor(documentId, offset, currentWord)) {
             // no need to send new completion request
-            computeProposals(currentWord, offset - latestCompletionResult.getOffset(), callback);
+            computeProposals(currentWord, offset - latestCompletionResult.getOffset(), callback, canResolve);
         } else {
             documentServiceClient.completion(documentPosition).then(new Operation<CompletionListDTO>() {
                 @Override
                 public void apply(CompletionListDTO list) throws OperationException {
                     latestCompletionResult.update(documentId, offset, currentWord, list);
-                    computeProposals(currentWord, 0, callback);
+                    computeProposals(currentWord, 0, callback, canResolve);
                 }
             }).catchError(new Operation<PromiseError>() {
                 @Override
@@ -136,7 +141,9 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
         return null;
     }
 
-    private void computeProposals(String currentWord, int offset, CodeAssistCallback callback) {
+    private void computeProposals(String currentWord, int offset, CodeAssistCallback callback, boolean canResolve) {
+        
+        
         List<CompletionProposal> proposals = newArrayList();
         for (CompletionItemDTO item : latestCompletionResult.getCompletionList().getItems()) {
             List<Match> highlights = filter(currentWord, item);
@@ -146,7 +153,7 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
                                                                         latestCompletionResult.getDocumentId(),
                                                                         resources, 
                                                                         imageProvider.getIcon(item.getKind()), 
-                                                                        serverCapabilities,
+                                                                        canResolve,
                                                                         highlights,
                                                                         offset));
             }

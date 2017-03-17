@@ -17,5 +17,5 @@ import io.typefox.lsapi.ServerCapabilities;
  */
 public interface LanguageServerEditorConfigurationFactory {
 
-    LanguageServerEditorConfiguration build(ServerCapabilities capabilities);
+    LanguageServerEditorConfiguration build();
 }

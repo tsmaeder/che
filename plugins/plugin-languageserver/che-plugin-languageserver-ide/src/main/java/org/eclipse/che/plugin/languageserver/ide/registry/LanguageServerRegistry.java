@@ -10,15 +10,13 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.registry;
 
-import io.typefox.lsapi.InitializeResult;
-import io.typefox.lsapi.ServerCapabilities;
-
-import com.google.gwt.core.client.Callback;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
-
+import io.typefox.lsapi.InitializeResult;
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.ProjectExtensionKey;
+import org.eclipse.che.api.languageserver.shared.dto.DtoClientImpls.ServerCapabilitiesDTOImpl;
 import org.eclipse.che.api.languageserver.shared.event.LanguageServerInitializeEventDto;
 import org.eclipse.che.api.languageserver.shared.lsapi.InitializeResultDTO;
 import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
@@ -26,8 +24,6 @@ import org.eclipse.che.api.languageserver.shared.model.impl.InitializeResultImpl
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.api.promises.client.callback.CallbackPromiseHelper;
-import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -47,25 +43,22 @@ import java.util.Map;
 
 import static org.eclipse.che.api.languageserver.shared.ProjectExtensionKey.createProjectKey;
 
-
 /**
  * @author Anatoliy Bazko
  */
 @Singleton
 public class LanguageServerRegistry {
-    private final EventBus                            eventBus;
-    private final LanguageServerRegistryServiceClient client;
+    private static final ServerCapabilities NO_CAPABILITIES = ServerCapabilitiesDTOImpl.make();
+    private final EventBus                                   eventBus;
+    private final LanguageServerRegistryServiceClient        client;
 
-    private final Map<ProjectExtensionKey, InitializeResult>                      projectToInitResult;
-    private final Map<ProjectExtensionKey, Callback<InitializeResult, Throwable>> callbackMap;
+    private final Map<ProjectExtensionKey, InitializeResult> projectToInitResult;
 
     @Inject
-    public LanguageServerRegistry(EventBus eventBus,
-                                  LanguageServerRegistryServiceClient client) {
+    public LanguageServerRegistry(EventBus eventBus, LanguageServerRegistryServiceClient client) {
         this.eventBus = eventBus;
         this.client = client;
         this.projectToInitResult = new HashMap<>();
-        this.callbackMap = new HashMap<>();
     }
 
     /**
@@ -76,28 +69,15 @@ public class LanguageServerRegistry {
         for (String ext : languageDescription.getFileExtensions()) {
             ProjectExtensionKey key = createProjectKey(projectPath, ext);
             projectToInitResult.put(key, initializeResult);
-
-            if (callbackMap.containsKey(key)) {
-                Callback<InitializeResult, Throwable> callback = callbackMap.remove(key);
-                callback.onSuccess(initializeResult);
-            }
         }
     }
 
-    public Promise<InitializeResult> getOrInitializeServer(String projectPath, String ext, String filePath) {
+    public void getOrInitializeServer(String projectPath, String ext, String filePath) {
         final ProjectExtensionKey key = createProjectKey(projectPath, ext);
-        if (projectToInitResult.containsKey(key)) {
-            return Promises.resolve(projectToInitResult.get(key));
-        } else {
-            //call initialize service
+        if (!projectToInitResult.containsKey(key)) {
+            // call initialize service
             client.initializeServer(filePath);
-            //wait for response
-            return CallbackPromiseHelper.createFromCallback(new CallbackPromiseHelper.Call<InitializeResult, Throwable>() {
-                @Override
-                public void makeCall(Callback<InitializeResult, Throwable> callback) {
-                    callbackMap.put(key, callback);
-                }
-            });
+            // wait for response
         }
     }
 
@@ -113,9 +93,7 @@ public class LanguageServerRegistry {
                     public void apply(List<InitializeResultDTO> initialResults) throws OperationException {
                         for (InitializeResultDTO initializeResultDTO : initialResults) {
                             for (LanguageDescription languageDescription : initializeResultDTO.getSupportedLanguages()) {
-                                register(initializeResultDTO.getProject(),
-                                         languageDescription,
-                                         initializeResultDTO.getCapabilities());
+                                register(initializeResultDTO.getProject(), languageDescription, initializeResultDTO.getCapabilities());
                             }
                         }
                     }
@@ -123,35 +101,32 @@ public class LanguageServerRegistry {
             }
 
             @Override
-            public void onWsAgentStopped(WsAgentStateEvent event) { }
+            public void onWsAgentStopped(WsAgentStateEvent event) {
+            }
         });
     }
 
     @Inject
-    protected void subscribeToInitializeEvent(final DtoUnmarshallerFactory unmarshallerFactory,
-                                              final MessageBusProvider messageBusProvider,
-                                              final NotificationManager notificationManager,
-                                              final EventBus eventBus) {
+    protected void subscribeToInitializeEvent(final DtoUnmarshallerFactory unmarshallerFactory, final MessageBusProvider messageBusProvider,
+                                              final NotificationManager notificationManager, final EventBus eventBus) {
         eventBus.addHandler(WsAgentStateEvent.TYPE, new WsAgentStateHandler() {
             @Override
             public void onWsAgentStarted(WsAgentStateEvent event) {
                 MessageBus messageBus = messageBusProvider.getMachineMessageBus();
-                Unmarshallable<LanguageServerInitializeEventDto> unmarshaller =
-                        unmarshallerFactory.newWSUnmarshaller(LanguageServerInitializeEventDto.class);
+                Unmarshallable<LanguageServerInitializeEventDto> unmarshaller = unmarshallerFactory
+                                .newWSUnmarshaller(LanguageServerInitializeEventDto.class);
 
                 try {
                     messageBus.subscribe("languageserver", new SubscriptionHandler<LanguageServerInitializeEventDto>(unmarshaller) {
                         @Override
                         protected void onMessageReceived(LanguageServerInitializeEventDto initializeEvent) {
-                            register(initializeEvent.getProjectPath(),
-                                     initializeEvent.getSupportedLanguages(),
+                            register(initializeEvent.getProjectPath(), initializeEvent.getSupportedLanguages(),
                                      initializeEvent.getServerCapabilities());
                         }
 
                         @Override
                         protected void onErrorReceived(Throwable exception) {
-                            notificationManager.notify(exception.getMessage(),
-                                                       StatusNotification.Status.FAIL,
+                            notificationManager.notify(exception.getMessage(), StatusNotification.Status.FAIL,
                                                        StatusNotification.DisplayMode.NOT_EMERGE_MODE);
                         }
                     });
@@ -165,5 +140,28 @@ public class LanguageServerRegistry {
                 projectToInitResult.clear();
             }
         });
+    }
+
+    public ServerCapabilities getCapabilities(String filePath) {
+        String projectPath = getProjectPath(filePath);
+        String extension= getExtension(filePath);
+        final ProjectExtensionKey key = createProjectKey(projectPath, extension);
+        InitializeResult initializeResult = projectToInitResult.get(key);
+        
+        if (initializeResult != null) {
+            return initializeResult.getCapabilities();
+        } else {
+            return NO_CAPABILITIES;
+        }
+    }
+
+    private String getExtension(String filePath) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private String getProjectPath(String filePath) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

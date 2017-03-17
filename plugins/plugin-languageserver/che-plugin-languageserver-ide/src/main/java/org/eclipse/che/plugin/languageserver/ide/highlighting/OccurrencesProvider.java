@@ -10,8 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.highlighting;
 
-import java.util.logging.Logger;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentHighlightDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentPositionParamsDTO;
 import org.eclipse.che.api.promises.client.Function;
@@ -26,11 +27,9 @@ import org.eclipse.che.ide.editor.orion.client.OrionOccurrencesHandler;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionOccurrenceContextOverlay;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionOccurrenceOverlay;
 import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerEditorConfiguration;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 /**
  * Provides occurrences highlights for the Orion Editor.
@@ -40,10 +39,10 @@ import com.google.inject.Singleton;
 @Singleton
 public class OccurrencesProvider implements OrionOccurrencesHandler {
 
-	private static final Logger LOGGER = Logger.getLogger(OccurrencesProvider.class.getName());
 	private final EditorAgent               editorAgent;
     private final TextDocumentServiceClient client;
     private final DtoBuildHelper            helper;
+    private LanguageServerRegistry registry;
 
     /**
      * Constructor.
@@ -52,10 +51,11 @@ public class OccurrencesProvider implements OrionOccurrencesHandler {
      * @param helper
      */
     @Inject
-    public OccurrencesProvider(EditorAgent editorAgent, TextDocumentServiceClient client, DtoBuildHelper helper) {
+    public OccurrencesProvider(EditorAgent editorAgent, TextDocumentServiceClient client, DtoBuildHelper helper, LanguageServerRegistry registry) {
         this.editorAgent = editorAgent;
         this.client = client;
         this.helper = helper;
+        this.registry= registry;
     }
 
     @Override
@@ -66,13 +66,12 @@ public class OccurrencesProvider implements OrionOccurrencesHandler {
             return null;
         }
         final TextEditor editor = ((TextEditor)activeEditor);
-        if (!(editor.getConfiguration() instanceof LanguageServerEditorConfiguration)) {
+        
+        ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile().getLocation().toString());
+        if (capabilities.isDocumentHighlightProvider() == null || !capabilities.isDocumentHighlightProvider()) {
             return null;
         }
-        final LanguageServerEditorConfiguration configuration = (LanguageServerEditorConfiguration)editor.getConfiguration();
-        if (configuration.getServerCapabilities().isDocumentHighlightProvider() == null || !configuration.getServerCapabilities().isDocumentHighlightProvider()) {
-            return null;
-        }
+
         final Document document = editor.getDocument();
         final TextDocumentPositionParamsDTO paramsDTO = helper.createTDPP(document, context.getStart());
         // FIXME: the result should be a Promise<List<DocumentHighlightDTO>> but the typefox API returns a single DocumentHighlightDTO

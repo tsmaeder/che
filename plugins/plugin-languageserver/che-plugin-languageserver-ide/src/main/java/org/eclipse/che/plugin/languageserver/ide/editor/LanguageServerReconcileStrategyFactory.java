@@ -10,11 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 /**
  * @author Evgen Vidolob
  */
 public interface LanguageServerReconcileStrategyFactory {
-    LanguageServerReconcileStrategy build(ServerCapabilities serverCapabilities);
+    LanguageServerReconcileStrategy build();
 }
