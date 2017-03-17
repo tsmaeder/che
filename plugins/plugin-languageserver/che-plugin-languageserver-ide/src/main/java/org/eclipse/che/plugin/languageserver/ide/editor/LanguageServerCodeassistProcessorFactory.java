@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import org.eclipse.che.plugin.languageserver.ide.editor.codeassist.LanguageServerCodeAssistProcessor;
 
 /**
@@ -19,5 +17,5 @@ import org.eclipse.che.plugin.languageserver.ide.editor.codeassist.LanguageServe
  */
 public interface LanguageServerCodeassistProcessorFactory {
     
-    LanguageServerCodeAssistProcessor create(ServerCapabilities capabilities);
+    LanguageServerCodeAssistProcessor create();
 }

@@ -48,18 +48,15 @@ public class LanguageServerSignatureHelp implements SignatureHelpProvider {
     private final TextDocumentServiceClient client;
     private final DtoBuildHelper            helper;
     private final NotificationManager       notificationManager;
-    private final ServerCapabilities        capabilities;
     private       HandlerRegistration       handlerRegistration;
 
     @Inject
     public LanguageServerSignatureHelp(TextDocumentServiceClient client,
                                        DtoBuildHelper helper,
-                                       NotificationManager notificationManager,
-                                       @Assisted ServerCapabilities capabilities) {
+                                       NotificationManager notificationManager) {
         this.client = client;
         this.helper = helper;
         this.notificationManager = notificationManager;
-        this.capabilities = capabilities;
     }
 
     @Override

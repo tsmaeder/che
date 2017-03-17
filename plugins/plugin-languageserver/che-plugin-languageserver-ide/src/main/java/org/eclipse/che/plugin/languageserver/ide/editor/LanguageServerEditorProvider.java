@@ -10,10 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.InitializeResult;
-
-import org.eclipse.che.api.promises.client.Function;
-import org.eclipse.che.api.promises.client.FunctionException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.js.Promises;
 import org.eclipse.che.ide.api.editor.AsyncEditorProvider;
@@ -39,13 +35,12 @@ import javax.inject.Inject;
 public class LanguageServerEditorProvider implements AsyncEditorProvider, EditorProvider {
 
     private LanguageServerEditorConfigurationFactory editorConfigurationFactory;
-    private final LanguageServerRegistry             registry;
+    private final LanguageServerRegistry registry;
     private final LoaderFactory loaderFactory;
 
     @Inject
     public LanguageServerEditorProvider(LanguageServerEditorConfigurationFactory editorConfigurationFactory,
-                                        LanguageServerRegistry registry,
-                                        LoaderFactory loaderFactory) {
+                    LanguageServerRegistry registry, LoaderFactory loaderFactory) {
         this.editorConfigurationFactory = editorConfigurationFactory;
         this.registry = registry;
         this.loaderFactory = loaderFactory;
@@ -61,10 +56,8 @@ public class LanguageServerEditorProvider implements AsyncEditorProvider, Editor
         return "Code Editor";
     }
 
-
     @com.google.inject.Inject
     private EditorBuilder editorBuilder;
-
 
     @Override
     public TextEditor getEditor() {
@@ -85,20 +78,16 @@ public class LanguageServerEditorProvider implements AsyncEditorProvider, Editor
     @Override
     public Promise<EditorPartPresenter> createEditor(VirtualFile file) {
         if (file instanceof File) {
-            File resource = (File)file;
+            File resource = (File) file;
 
-            Promise<InitializeResult> promise =
-                    registry.getOrInitializeServer(resource.getRelatedProject().get().getPath(), resource.getExtension(), resource.getLocation().toString());
+            registry.getOrInitializeServer(resource.getProject().getPath(), resource.getExtension(), resource.getLocation().toString());
             final MessageLoader loader = loaderFactory.newLoader("Initializing Language Server for " + resource.getExtension());
             loader.show();
-            return promise.thenPromise(new Function<InitializeResult, Promise<EditorPartPresenter>>() {
-                @Override
-                public Promise<EditorPartPresenter> apply(InitializeResult arg) throws FunctionException {
-                    loader.hide();
-                    return Promises.<EditorPartPresenter>resolve(createEditor(editorConfigurationFactory.build(arg.getCapabilities())));
-                }
-            });
-
+            try {
+                return Promises.<EditorPartPresenter>resolve(createEditor(editorConfigurationFactory.build()));
+            } finally {
+                loader.hide();
+            }
         }
         return null;
     }

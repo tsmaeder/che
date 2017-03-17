@@ -10,11 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor.signature;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 /**
  * @author Evgen Vidolob
  */
 public interface LanguageServerSignatureHelpFactory {
-    LanguageServerSignatureHelp create(ServerCapabilities capabilities);
+    LanguageServerSignatureHelp create();
 }

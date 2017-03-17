@@ -67,6 +67,8 @@ public class FindDefinitionAction extends AbstractPerspectiveAction {
         if (activeEditor instanceof TextEditor) {
             TextEditorConfiguration configuration = ((TextEditor)activeEditor).getConfiguration();
             if (configuration instanceof LanguageServerEditorConfiguration) {
+                // TODO: we can only ask the server here whether the action should be enabled.
+                
                 ServerCapabilities capabilities = ((LanguageServerEditorConfiguration)configuration).getServerCapabilities();
                 event.getPresentation()
                      .setEnabledAndVisible(capabilities.isDefinitionProvider() != null && capabilities.isDefinitionProvider());

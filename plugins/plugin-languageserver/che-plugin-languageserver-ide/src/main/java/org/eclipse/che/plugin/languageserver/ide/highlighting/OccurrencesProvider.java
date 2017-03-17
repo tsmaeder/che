@@ -10,9 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.highlighting;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentHighlightDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentPositionParamsDTO;
 import org.eclipse.che.api.promises.client.Function;
@@ -30,8 +29,7 @@ import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerEditorConf
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import java.util.logging.Logger;
 
 /**
  * Provides occurrences highlights for the Orion Editor.
@@ -68,10 +66,6 @@ public class OccurrencesProvider implements OrionOccurrencesHandler {
         }
         final TextEditor editor = ((TextEditor)activeEditor);
         if (!(editor.getConfiguration() instanceof LanguageServerEditorConfiguration)) {
-            return null;
-        }
-        final LanguageServerEditorConfiguration configuration = (LanguageServerEditorConfiguration)editor.getConfiguration();
-        if (configuration.getServerCapabilities().isDocumentHighlightProvider() == null || !configuration.getServerCapabilities().isDocumentHighlightProvider()) {
             return null;
         }
         final Document document = editor.getDocument();

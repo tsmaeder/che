@@ -36,8 +36,7 @@ public class LanguageServerReconcileStrategy implements ReconcilingStrategy {
     private final TextDocumentSynchronize synchronize;
 
     @Inject
-    public LanguageServerReconcileStrategy(TextDocumentSynchronizeFactory synchronizeFactory,
-                                           @Assisted ServerCapabilities serverCapabilities) {
+    public LanguageServerReconcileStrategy(TextDocumentSynchronizeFactory synchronizeFactory) {
 
         TextDocumentSyncKind documentSync = serverCapabilities.getTextDocumentSync();
         synchronize = synchronizeFactory.getSynchronize(documentSync);
