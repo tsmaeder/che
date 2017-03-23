@@ -11,20 +11,36 @@
 package org.eclipse.che.api.languageserver;
 
 import io.typefox.lsapi.CodeLensOptions;
+import io.typefox.lsapi.CompletionItem;
 import io.typefox.lsapi.CompletionOptions;
 import io.typefox.lsapi.DocumentOnTypeFormattingOptions;
 import io.typefox.lsapi.InitializeResult;
+import io.typefox.lsapi.Position;
+import io.typefox.lsapi.Range;
 import io.typefox.lsapi.ServerCapabilities;
 import io.typefox.lsapi.SignatureHelpOptions;
-
+import io.typefox.lsapi.TextEdit;
 import org.eclipse.che.api.languageserver.shared.lsapi.CodeLensOptionsDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionOptionsDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.DocumentFilterDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentOnTypeFormattingOptionsDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.InitializeResultDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.LanguageDescriptionDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.LanguageServerDescriptionDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.PositionDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.RangeDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.ServerCapabilitiesDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.SignatureHelpOptionsDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.TextEditDTO;
+import org.eclipse.che.api.languageserver.shared.model.DocumentFilter;
+import org.eclipse.che.api.languageserver.shared.model.InitializedServer;
 import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
@@ -38,6 +54,14 @@ public class DtoConverter {
         initializeResultDTO.setCapabilities(asDto(initializeResult.getCapabilities()));
         return initializeResultDTO;
     }
+    
+    public static InitializedServerDTO asDto(InitializedServer server) {
+        InitializedServerDTO dto = newDto(InitializedServerDTO.class);
+        dto.setDescription(asDto(server.getDescription()));
+        dto.setInitializeResult(asDto(server.getInitializeResult()));
+        return dto;
+    }
+
 
     public static LanguageDescriptionDTO asDto(LanguageDescription languageDescription) {
         LanguageDescriptionDTO languageDescriptionDTO = newDto(LanguageDescriptionDTO.class);
@@ -114,7 +138,62 @@ public class DtoConverter {
         codeLensOptionsDTO.setResolveProvider(codeLensOptions.getResolveProvider());
         return codeLensOptionsDTO;
     }
+    
+    public static DocumentFilterDTO asDto(DocumentFilter documentFilter) {
+        DocumentFilterDTO documentFilterDTO = newDto(DocumentFilterDTO.class);
+        documentFilterDTO.setGlobPattern(documentFilter.getGlobPattern());
+        documentFilterDTO.setLanguageId(documentFilter.getLanguageId());
+        documentFilterDTO.setScheme(documentFilter.getScheme());
+        return documentFilterDTO;
+    }
+
+    public static LanguageServerDescriptionDTO asDto(LanguageServerDescription serverDescription) {
+        LanguageServerDescriptionDTO serverDescriptionDTO = newDto(LanguageServerDescriptionDTO.class);
+        List<DocumentFilterDTO> filters= new ArrayList<>();
+        for (DocumentFilter filter : serverDescription.getDocumentFilters()) {
+            filters.add(asDto(filter));
+        }
+        
+        serverDescriptionDTO.setDocumentFilters(filters);
+        serverDescriptionDTO.setLanguageIds(serverDescription.getLanguageIds());
+        return serverDescriptionDTO;
+    }
+    
+    public static CompletionItemDTO asDto(CompletionItem c) {
+        CompletionItemDTO dto = newDto(CompletionItemDTO.class);
+        dto.setData(c.getData());
+        dto.setDetail(c.getDetail());
+        dto.setDocumentation(c.getDocumentation());
+        dto.setFilterText(c.getFilterText());
+        dto.setInsertText(c.getFilterText());
+        dto.setKind(c.getKind());
+        dto.setLabel(c.getLabel());
+        dto.setSortText(c.getSortText());
+        dto.setTextEdit(asDto(c.getTextEdit()));
+        return dto;
+    }
+
+
+    public static TextEditDTO asDto(TextEdit textEdit) {
+        TextEditDTO dto = newDto(TextEditDTO.class);
+        dto.setNewText(textEdit.getNewText());
+        dto.setRange(asDto(textEdit.getRange()));
+        return dto;
+    }
+
+    public static RangeDTO asDto(Range range) {
+        RangeDTO dto = newDto(RangeDTO.class);
+        dto.setStart(asDto(range.getStart()));
+        dto.setEnd(asDto(range.getEnd()));
+        return dto;
+    }
+
+    public static PositionDTO asDto(Position pos) {
+        PositionDTO dto = newDto(PositionDTO.class);
+        dto.setCharacter(pos.getCharacter());
+        dto.setLine(pos.getLine());
+        return dto;
+    }
 
     private DtoConverter() { }
-
 }

@@ -13,27 +13,16 @@
 package org.eclipse.che.api.languageserver.shared.lsapi;
 
 import io.typefox.lsapi.InitializeResult;
-
 import org.eclipse.che.dto.shared.DTO;
-
-import java.util.List;
 
 /**
  * @author Anatoliy Bazko
  */
 @DTO
 public interface InitializeResultDTO extends InitializeResult {
-
-    String getProject();
-
-    void setProject(String project);
-
     @Override
     ServerCapabilitiesDTO getCapabilities();
 
     void setCapabilities(ServerCapabilitiesDTO capabilities);
 
-    List<LanguageDescriptionDTO> getSupportedLanguages();
-
-    void setSupportedLanguages(List<LanguageDescriptionDTO> supportedLanguages);
 }

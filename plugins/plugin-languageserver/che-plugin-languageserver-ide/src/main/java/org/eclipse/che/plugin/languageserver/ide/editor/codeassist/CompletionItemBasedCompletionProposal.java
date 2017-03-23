@@ -10,18 +10,15 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor.codeassist;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Overflow;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.RangeDTO;
-import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentIdentifierDTO;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
@@ -48,7 +45,6 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
 
     private CompletionItemDTO               completionItem;
     private final TextDocumentServiceClient documentServiceClient;
-    private final TextDocumentIdentifierDTO documentId;
     private final LanguageServerResources   resources;
     private final Icon                      icon;
     private final ServerCapabilities        serverCapabilities;
@@ -58,7 +54,6 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
 
     CompletionItemBasedCompletionProposal(CompletionItemDTO completionItem,
                                           TextDocumentServiceClient documentServiceClient,
-                                          TextDocumentIdentifierDTO documentId,
                                           LanguageServerResources resources,
                                           Icon icon,
                                           ServerCapabilities serverCapabilities,
@@ -66,7 +61,6 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
                                           int offset) {
         this.completionItem = completionItem;
         this.documentServiceClient = documentServiceClient;
-        this.documentId = documentId;
         this.resources = resources;
         this.icon = icon;
         this.serverCapabilities = serverCapabilities;
@@ -177,7 +171,6 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
     }
 
     private Promise<CompletionItemDTO> resolve() {
-        completionItem.setTextDocumentIdentifier(documentId);
         return documentServiceClient.resolveCompletionItem(completionItem);
     }
 

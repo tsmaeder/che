@@ -10,11 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.navigation.symbol;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentSymbolParamsDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.RangeDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.SymbolInformationDTO;
@@ -29,7 +27,6 @@ import org.eclipse.che.ide.api.action.ActionEvent;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.editor.editorconfig.TextEditorConfiguration;
-import org.eclipse.che.ide.api.editor.text.LinearRange;
 import org.eclipse.che.ide.api.editor.text.TextPosition;
 import org.eclipse.che.ide.api.editor.text.TextRange;
 import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
@@ -42,9 +39,11 @@ import org.eclipse.che.plugin.languageserver.ide.filters.FuzzyMatches;
 import org.eclipse.che.plugin.languageserver.ide.filters.Match;
 import org.eclipse.che.plugin.languageserver.ide.quickopen.QuickOpenModel;
 import org.eclipse.che.plugin.languageserver.ide.quickopen.QuickOpenPresenter;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 
 import javax.validation.constraints.NotNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,9 +71,9 @@ public class GoToSymbolAction extends AbstractPerspectiveAction implements Quick
     private final SymbolKindHelper           symbolKindHelper;
     private       QuickOpenPresenter         presenter;
     private       List<SymbolInformationDTO> cachedItems;
-    private       LinearRange                selectedLinearRange;
     private       TextEditor                 activeEditor;
     private       TextPosition               cursorPosition;
+    private LanguageServerRegistry lsRegistry;
 
     @Inject
     public GoToSymbolAction(QuickOpenPresenter presenter,
@@ -84,7 +83,8 @@ public class GoToSymbolAction extends AbstractPerspectiveAction implements Quick
                             DtoFactory dtoFactory,
                             NotificationManager notificationManager,
                             FuzzyMatches fuzzyMatches,
-                            SymbolKindHelper symbolKindHelper) {
+                            SymbolKindHelper symbolKindHelper,
+                            LanguageServerRegistry lsRegistry) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), localization.goToSymbolActionDescription(), localization.goToSymbolActionTitle(), null,
               null);
         this.presenter = presenter;
@@ -95,6 +95,7 @@ public class GoToSymbolAction extends AbstractPerspectiveAction implements Quick
         this.notificationManager = notificationManager;
         this.fuzzyMatches = fuzzyMatches;
         this.symbolKindHelper = symbolKindHelper;
+        this.lsRegistry= lsRegistry;
     }
 
     @Override
@@ -125,10 +126,11 @@ public class GoToSymbolAction extends AbstractPerspectiveAction implements Quick
     @Override
     public void updateInPerspective(@NotNull ActionEvent event) {
         EditorPartPresenter activeEditor = editorAgent.getActiveEditor();
+        
         if (activeEditor instanceof TextEditor) {
             TextEditorConfiguration configuration = ((TextEditor)activeEditor).getConfiguration();
             if (configuration instanceof LanguageServerEditorConfiguration) {
-                ServerCapabilities capabilities = ((LanguageServerEditorConfiguration)configuration).getServerCapabilities();
+                ServerCapabilities capabilities = lsRegistry.getCapabilities(activeEditor.getEditorInput().getFile().getLocation().toString());
                 event.getPresentation()
                      .setEnabledAndVisible(capabilities.isDocumentSymbolProvider() != null && capabilities.isDocumentSymbolProvider());
                 return;
@@ -297,7 +299,6 @@ public class GoToSymbolAction extends AbstractPerspectiveAction implements Quick
             activeEditor.setFocus();
         }
         cachedItems = null;
-        selectedLinearRange = null;
         activeEditor = null;
     }
 }

@@ -17,13 +17,18 @@ import com.google.inject.Singleton;
 
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncherTemplate;
+import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
 import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+import org.eclipse.che.api.languageserver.shared.model.impl.DocumentFilterImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionImpl;
+import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static java.util.Arrays.asList;
 
@@ -37,26 +42,24 @@ public class PhpLanguageServerLauncher extends LanguageServerLauncherTemplate {
     private static final String   LANGUAGE_ID = "php";
     private static final String[] EXTENSIONS  = new String[] {"php"};
     private static final String[] MIME_TYPES  = new String[] {"text/x-php"};
+    private static final String   GLOB = "*.php";
 
     private final Path launchScript;
 
-    private static final LanguageDescriptionImpl description;
+    private static final LanguageServerDescription DESCRIPTION = createServerDescription();
 
     static {
-        description = new LanguageDescriptionImpl();
-        description.setFileExtensions(asList(EXTENSIONS));
-        description.setLanguageId(LANGUAGE_ID);
-        description.setMimeTypes(asList(MIME_TYPES));
     }
 
     @Inject
-    public PhpLanguageServerLauncher() {
+    public PhpLanguageServerLauncher(LanguageServerRegistry registry) {
         this.launchScript = Paths.get(System.getenv("HOME"), "che/ls-php/launch.sh");
-    }
+        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
+        description.setFileExtensions(asList(EXTENSIONS));
+        description.setLanguageId(LANGUAGE_ID);
+        description.setMimeTypes(asList(MIME_TYPES));
+        registry.registerLanguage(description);
 
-    @Override
-    public LanguageDescription getLanguageDescription() {
-        return description;
     }
 
     @Override
@@ -79,5 +82,16 @@ public class PhpLanguageServerLauncher extends LanguageServerLauncherTemplate {
         } catch (IOException e) {
             throw new LanguageServerException("Can't start PHP language server", e);
         }
+    }
+    
+    @Override
+    public LanguageServerDescription getDescription() {
+        return DESCRIPTION;
+    }
+
+    private static LanguageServerDescription createServerDescription() {
+        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
+                        Arrays.asList(new DocumentFilterImpl(LANGUAGE_ID, GLOB, null)));
+        return description;
     }
 }

@@ -10,11 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor.codeassist;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionListDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentIdentifierDTO;
@@ -145,7 +143,6 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
             if (highlights != null) {
                 proposals.add(new CompletionItemBasedCompletionProposal(item, 
                                                                         documentServiceClient,
-                                                                        latestCompletionResult.getDocumentId(),
                                                                         resources, 
                                                                         imageProvider.getIcon(item.getKind()), 
                                                                         serverCapabilities,

@@ -11,8 +11,7 @@
 package org.eclipse.che.plugin.languageserver.ide.service;
 
 import com.google.inject.Inject;
-
-import org.eclipse.che.api.languageserver.shared.lsapi.InitializeResultDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.LanguageDescriptionDTO;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -58,16 +57,15 @@ public class LanguageServerRegistryServiceClient {
     /**
      * @return all registered languages
      */
-    public Promise<List<InitializeResultDTO>> getRegisteredLanguages() {
+    public Promise<List<InitializedServerDTO>> getInitializedServers() {
         String requestUrl = appContext.getDevMachine().getWsAgentBaseUrl() + BASE_URI + "/registered";
         return asyncRequestFactory.createGetRequest(requestUrl)
                                   .header(ACCEPT, APPLICATION_JSON)
-                                  .send(unmarshallerFactory.newListUnmarshaller(InitializeResultDTO.class));
+                                  .send(unmarshallerFactory.newListUnmarshaller(InitializedServerDTO.class));
     }
 
     public void initializeServer(String path) {
         String requestUrl = appContext.getDevMachine().getWsAgentBaseUrl() + BASE_URI + "/initialize?path=" + path;
         asyncRequestFactory.createPostRequest(requestUrl, null).send();
     }
-
 }

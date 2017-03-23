@@ -10,10 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.api.languageserver.registry;
 
-import io.typefox.lsapi.ServerCapabilities;
+import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.services.LanguageServer;
-
-import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
 
 /**
  * @author Anatoliy Bazko
@@ -31,7 +30,6 @@ public interface ServerInitializerObserver {
      * @param projectPath
      */
     void onServerInitialized(LanguageServer server,
-                             ServerCapabilities capabilities,
-                             LanguageDescription languageDescription,
-                             String projectPath);
+                             InitializeResult initResult,
+                             LanguageServerDescription languageServerDescription);
 }

@@ -12,15 +12,12 @@ package org.eclipse.che.api.languageserver.service;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import org.eclipse.che.api.languageserver.DtoConverter;
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
-import org.eclipse.che.api.languageserver.registry.LanguageServerDescription;
 import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
-import org.eclipse.che.api.languageserver.registry.LanguageServerRegistryImpl;
-import org.eclipse.che.api.languageserver.shared.ProjectExtensionKey;
-import org.eclipse.che.api.languageserver.shared.lsapi.InitializeResultDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.LanguageDescriptionDTO;
+import org.eclipse.che.api.languageserver.shared.model.impl.InitializedServerImpl;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -28,12 +25,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.Collections;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
-import static org.eclipse.che.api.languageserver.DtoConverter.asDto;
-import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 @Singleton
 @Path("languageserver")
@@ -50,7 +46,7 @@ public class LanguageRegistryService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("supported")
 	public List<LanguageDescriptionDTO> getSupportedLanguages() {
-		return registry.getSupportedLanguages()
+		return registry.getLanguages()
 					   .stream()
 					   .map(DtoConverter::asDto)
 					   .collect(toList());
@@ -59,24 +55,8 @@ public class LanguageRegistryService {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("registered")
-	public List<InitializeResultDTO> getRegisteredLanguages() {
-		return registry.getInitializedLanguages()
-					   .entrySet()
-					   .stream()
-					   .map(entry -> {
-						   ProjectExtensionKey projectExtensionKey = entry.getKey();
-						   LanguageServerDescription serverDescription = entry.getValue();
-
-						   List<LanguageDescriptionDTO> languageDescriptionDTOs
-								   = Collections.singletonList(asDto(serverDescription.getLanguageDescription()));
-
-						   InitializeResultDTO dto = newDto(InitializeResultDTO.class);
-						   dto.setProject(projectExtensionKey.getProject().substring(LanguageServerRegistryImpl.PROJECT_FOLDER_PATH.length()));
-						   dto.setSupportedLanguages(languageDescriptionDTOs);
-						   dto.setCapabilities(asDto(serverDescription.getInitializeResult().getCapabilities()));
-						   return dto;
-					   })
-					   .collect(toList());
+	public List<InitializedServerDTO> getInitializedServers() {
+		return registry.getInitializedServers().stream().map((InitializedServerImpl server)-> { return DtoConverter.asDto(server);}).collect(Collectors.toList());
 
 	}
 
@@ -84,6 +64,6 @@ public class LanguageRegistryService {
     @Path("initialize")
 	public void initialize(@QueryParam("path") String path) throws LanguageServerException {
         //in most cases starts new LS if not already started
-        registry.findServer(TextDocumentService.prefixURI(path));
+        registry.launchServers(TextDocumentService.prefixURI(path));
     }
 }

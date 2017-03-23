@@ -10,8 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.api.languageserver.shared.event;
 
-import org.eclipse.che.api.languageserver.shared.lsapi.LanguageDescriptionDTO;
-import org.eclipse.che.api.languageserver.shared.lsapi.ServerCapabilitiesDTO;
+import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
 import org.eclipse.che.dto.shared.DTO;
 
 /**
@@ -20,15 +19,6 @@ import org.eclipse.che.dto.shared.DTO;
 @DTO
 public interface LanguageServerInitializeEventDto {
 
-    String getProjectPath();
-
-    void setProjectPath(String projectPath);
-
-    LanguageDescriptionDTO getSupportedLanguages();
-
-    void setSupportedLanguages(LanguageDescriptionDTO supportedLanguages);
-
-    ServerCapabilitiesDTO getServerCapabilities();
-
-    void setServerCapabilities(ServerCapabilitiesDTO serverCapabilities);
+    InitializedServerDTO getServer();
+    void setServer(InitializedServerDTO desc);
 }

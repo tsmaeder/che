@@ -29,6 +29,7 @@ import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerEditorConf
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -71,23 +72,26 @@ public class OccurrencesProvider implements OrionOccurrencesHandler {
         final Document document = editor.getDocument();
         final TextDocumentPositionParamsDTO paramsDTO = helper.createTDPP(document, context.getStart());
         // FIXME: the result should be a Promise<List<DocumentHighlightDTO>> but the typefox API returns a single DocumentHighlightDTO
-        Promise<DocumentHighlightDTO> promise = client.documentHighlight(paramsDTO);
-        Promise<OrionOccurrenceOverlay[]> then = promise.then(new Function<DocumentHighlightDTO, OrionOccurrenceOverlay[]>() {
+        Promise<List<DocumentHighlightDTO>> promise = client.documentHighlight(paramsDTO);
+        Promise<OrionOccurrenceOverlay[]> then = promise.then(new Function<List<DocumentHighlightDTO>, OrionOccurrenceOverlay[]>() {
             @Override
-            public OrionOccurrenceOverlay[] apply(DocumentHighlightDTO highlight) throws FunctionException {
-            	if(highlight == null) {
+            public OrionOccurrenceOverlay[] apply(List<DocumentHighlightDTO> highlights) throws FunctionException {
+            	if(highlights == null) {
             		return new OrionOccurrenceOverlay[0];
             	}
-            	final OrionOccurrenceOverlay[] occurrences = new OrionOccurrenceOverlay[1];
-        		final OrionOccurrenceOverlay occurrence = OrionOccurrenceOverlay.create();
-						// FIXME: this assumes that the language server will
-						// compute a range based on 'line 1', ie, the whole
-						// file content is on line 1 and the location to
-						// highlight is given by the 'character' position
-						// only.
-        		occurrence.setStart(highlight.getRange().getStart().getCharacter());
-        		occurrence.setEnd(highlight.getRange().getEnd().getCharacter() + 1);
-        		occurrences[0] = occurrence;
+            	final OrionOccurrenceOverlay[] occurrences = new OrionOccurrenceOverlay[highlights.size()];
+            	int i= 0;
+            	for (DocumentHighlightDTO highlight : highlights) {
+            		final OrionOccurrenceOverlay occurrence = OrionOccurrenceOverlay.create();
+    						// FIXME: this assumes that the language server will
+    						// compute a range based on 'line 1', ie, the whole
+    						// file content is on line 1 and the location to
+    						// highlight is given by the 'character' position
+    						// only.
+            		occurrence.setStart(highlight.getRange().getStart().getCharacter());
+            		occurrence.setEnd(highlight.getRange().getEnd().getCharacter() + 1);
+            		occurrences[i++] = occurrence;
+            	}
                 return occurrences;
             }
         });

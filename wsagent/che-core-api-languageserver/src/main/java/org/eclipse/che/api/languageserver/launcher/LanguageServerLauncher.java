@@ -11,9 +11,8 @@
 package org.eclipse.che.api.languageserver.launcher;
 
 import io.typefox.lsapi.services.LanguageServer;
-
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
-import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
 
 /**
  * @author Anatoliy Bazko
@@ -28,7 +27,7 @@ public interface LanguageServerLauncher {
     /**
      * Gets supported languages.
      */
-    LanguageDescription getLanguageDescription();
+    LanguageServerDescription getDescription();
 
     boolean isAbleToLaunch();
 }

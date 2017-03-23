@@ -12,7 +12,6 @@ package org.eclipse.che.plugin.csharp.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
 import org.eclipse.che.api.project.server.handlers.ProjectHandler;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
@@ -26,6 +25,7 @@ import org.eclipse.che.plugin.csharp.projecttype.CreateNetCoreProjectHandler;
  */
 @DynaModule
 public class CSharpModule extends AbstractModule {
+    
     @Override
     protected void configure() {
         Multibinder<ProjectTypeDef> projectTypeMultibinder = Multibinder.newSetBinder(binder(), ProjectTypeDef.class);

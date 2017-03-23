@@ -10,15 +10,15 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.json.languageserver;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.eclipse.che.api.languageserver.registry.ServerInitializerObserver;
-import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
-
+import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.ServerCapabilities;
 import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
+import org.eclipse.che.api.languageserver.registry.ServerInitializerObserver;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implements the specifics related to the JSON language server.
@@ -35,8 +35,8 @@ public class JsonLanguageServer extends JsonBasedLanguageServer implements Serve
     private final static String JSON_SCHEMA_ASSOCIATIONS = "json/schemaAssociations";
 
     @Override
-    public void onServerInitialized(LanguageServer server, ServerCapabilities capabilities,
-            LanguageDescription languageDescription, String projectPath) {
+    public void onServerInitialized(LanguageServer server, InitializeResult initResult,
+            LanguageServerDescription languageDescription) {
         registerSchemaAssociations();
     }
 

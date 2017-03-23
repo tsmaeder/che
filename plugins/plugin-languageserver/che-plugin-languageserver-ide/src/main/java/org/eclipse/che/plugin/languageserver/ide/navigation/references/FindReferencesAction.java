@@ -10,10 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.navigation.references;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.inject.Inject;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.LocationDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.PositionDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.ReferenceContextDTO;
@@ -30,9 +28,11 @@ import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerEditorConfiguration;
 import org.eclipse.che.plugin.languageserver.ide.location.OpenLocationPresenter;
 import org.eclipse.che.plugin.languageserver.ide.location.OpenLocationPresenterFactory;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 
 import javax.validation.constraints.NotNull;
+
 import java.util.List;
 
 import static java.util.Collections.singletonList;
@@ -47,15 +47,18 @@ public class FindReferencesAction extends AbstractPerspectiveAction {
     private final TextDocumentServiceClient client;
     private final DtoFactory                dtoFactory;
     private final OpenLocationPresenter     presenter;
+    private LanguageServerRegistry lsRegistry;
 
     @Inject
     public FindReferencesAction(EditorAgent editorAgent, OpenLocationPresenterFactory presenterFactory,
-                                TextDocumentServiceClient client, DtoFactory dtoFactory) {
+                                TextDocumentServiceClient client, DtoFactory dtoFactory,
+                                LanguageServerRegistry lsRegistry) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), "Find References", "Find References", null, null);
         this.editorAgent = editorAgent;
         this.client = client;
         this.dtoFactory = dtoFactory;
         presenter = presenterFactory.create("Find References");
+        this.lsRegistry= lsRegistry;
     }
 
     @Override
@@ -64,7 +67,7 @@ public class FindReferencesAction extends AbstractPerspectiveAction {
         if (activeEditor instanceof TextEditor) {
             TextEditorConfiguration configuration = ((TextEditor)activeEditor).getConfiguration();
             if (configuration instanceof LanguageServerEditorConfiguration) {
-                ServerCapabilities capabilities = ((LanguageServerEditorConfiguration)configuration).getServerCapabilities();
+                ServerCapabilities capabilities = lsRegistry.getCapabilities(activeEditor.getEditorInput().getFile().getLocation().toString());
                 event.getPresentation()
                      .setEnabledAndVisible(capabilities.isReferencesProvider() != null && capabilities.isReferencesProvider());
                 return;

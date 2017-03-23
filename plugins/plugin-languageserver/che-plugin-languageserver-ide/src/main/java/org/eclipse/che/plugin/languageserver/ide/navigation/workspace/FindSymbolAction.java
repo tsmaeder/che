@@ -14,7 +14,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import org.eclipse.che.api.languageserver.shared.lsapi.LocationDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.RangeDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.SymbolInformationDTO;
@@ -41,6 +40,7 @@ import org.eclipse.che.plugin.languageserver.ide.service.WorkspaceServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.OpenFileInEditorHelper;
 
 import javax.validation.constraints.NotNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -105,12 +105,13 @@ public class FindSymbolAction extends AbstractPerspectiveAction implements Quick
         if (Strings.isNullOrEmpty(value)|| editorAgent.getActiveEditor() == null) {
             promise = Promises.resolve(Collections.<SymbolEntry>emptyList());
         } else {
-            promise = delayer.trigger(new Task<Promise<List<SymbolEntry>>>() {
+            Task<Promise<List<SymbolEntry>>> task = new Task<Promise<List<SymbolEntry>>>() {
                 @Override
                 public Promise<List<SymbolEntry>> run() {
                     return searchSymbols(value);
                 }
-            });
+            };
+            promise = delayer.trigger(task);
         }
         return promise.then(new Function<List<SymbolEntry>, QuickOpenModel>() {
             @Override
@@ -123,7 +124,6 @@ public class FindSymbolAction extends AbstractPerspectiveAction implements Quick
     private Promise<List<SymbolEntry>> searchSymbols(final String value) {
         WorkspaceSymbolParamsDTO params = dtoFactory.createDto(WorkspaceSymbolParamsDTO.class);
         params.setQuery(value);
-        params.setFileUri(editorAgent.getActiveEditor().getEditorInput().getFile().getLocation().toString());
         return workspaceServiceClient.symbol(params).then(new Function<List<SymbolInformationDTO>, List<SymbolEntry>>() {
             @Override
             public List<SymbolEntry> apply(List<SymbolInformationDTO> types) throws FunctionException {

@@ -10,12 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.service;
 
-import static org.eclipse.che.ide.MimeType.APPLICATION_JSON;
-import static org.eclipse.che.ide.rest.HTTPHeader.ACCEPT;
-import static org.eclipse.che.ide.rest.HTTPHeader.CONTENT_TYPE;
-
-import java.util.List;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.typefox.lsapi.CompletionItem;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionItemDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.CompletionListDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.DidChangeTextDocumentParamsDTO;
@@ -54,10 +51,11 @@ import org.eclipse.che.ide.websocket.rest.SubscriptionHandler;
 import org.eclipse.che.plugin.languageserver.ide.editor.PublishDiagnosticsProcessor;
 import org.eclipse.che.plugin.languageserver.ide.editor.ShowMessageProcessor;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import java.util.List;
 
-import io.typefox.lsapi.CompletionItem;
+import static org.eclipse.che.ide.MimeType.APPLICATION_JSON;
+import static org.eclipse.che.ide.rest.HTTPHeader.ACCEPT;
+import static org.eclipse.che.ide.rest.HTTPHeader.CONTENT_TYPE;
 
 
 /**
@@ -299,9 +297,9 @@ public class TextDocumentServiceClient {
      * @param position
      * @return a {@link Promise} of an array of {@link DocumentHighlightDTO} which will be computed by the language server.
      */
-    public Promise<DocumentHighlightDTO> documentHighlight(TextDocumentPositionParamsDTO position) {
+    public Promise<List<DocumentHighlightDTO>> documentHighlight(TextDocumentPositionParamsDTO position) {
         final String requestUrl = appContext.getDevMachine().getWsAgentBaseUrl() + "/languageserver/textDocument/documentHighlight";
-        final Unmarshallable<DocumentHighlightDTO> unmarshaller = unmarshallerFactory.newUnmarshaller(DocumentHighlightDTO.class);
+        final Unmarshallable<List<DocumentHighlightDTO>> unmarshaller = unmarshallerFactory.newListUnmarshaller(DocumentHighlightDTO.class);
         return asyncRequestFactory.createPostRequest(requestUrl, null).header(ACCEPT, APPLICATION_JSON)
                            .header(CONTENT_TYPE, APPLICATION_JSON).data(((JsonSerializable)position).toJson()).send(unmarshaller);
     }

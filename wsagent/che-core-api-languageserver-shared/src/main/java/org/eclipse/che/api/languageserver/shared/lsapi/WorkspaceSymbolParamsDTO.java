@@ -20,8 +20,4 @@ public interface WorkspaceSymbolParamsDTO extends WorkspaceSymbolParams {
      * A non-empty query string
      */
     void setQuery(final String query);
-
-    String getFileUri();
-
-    void setFileUri(String fileUri);
 }

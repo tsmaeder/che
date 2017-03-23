@@ -30,6 +30,7 @@ import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerEditorConfiguration;
 import org.eclipse.che.plugin.languageserver.ide.location.OpenLocationPresenter;
 import org.eclipse.che.plugin.languageserver.ide.location.OpenLocationPresenterFactory;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
 
@@ -50,15 +51,17 @@ public class FindDefinitionAction extends AbstractPerspectiveAction {
     private final TextDocumentServiceClient client;
     private final DtoBuildHelper            dtoBuildHelper;
     private final OpenLocationPresenter     presenter;
+    private LanguageServerRegistry lsRegistry;
 
     @Inject
     public FindDefinitionAction(EditorAgent editorAgent, OpenLocationPresenterFactory presenterFactory,
-                                TextDocumentServiceClient client, DtoBuildHelper dtoBuildHelper) {
+                                TextDocumentServiceClient client, DtoBuildHelper dtoBuildHelper, LanguageServerRegistry lsRegistry) {
         super(singletonList(PROJECT_PERSPECTIVE_ID), "Find Definition", "Find Definition", null, null);
         this.editorAgent = editorAgent;
         this.client = client;
         this.dtoBuildHelper = dtoBuildHelper;
         presenter = presenterFactory.create("Find Definition");
+        this.lsRegistry= lsRegistry;
     }
 
     @Override
@@ -69,7 +72,7 @@ public class FindDefinitionAction extends AbstractPerspectiveAction {
             if (configuration instanceof LanguageServerEditorConfiguration) {
                 // TODO: we can only ask the server here whether the action should be enabled.
                 
-                ServerCapabilities capabilities = ((LanguageServerEditorConfiguration)configuration).getServerCapabilities();
+                ServerCapabilities capabilities = lsRegistry.getCapabilities(activeEditor.getEditorInput().getFile().getLocation().toString());
                 event.getPresentation()
                      .setEnabledAndVisible(capabilities.isDefinitionProvider() != null && capabilities.isDefinitionProvider());
                 return;

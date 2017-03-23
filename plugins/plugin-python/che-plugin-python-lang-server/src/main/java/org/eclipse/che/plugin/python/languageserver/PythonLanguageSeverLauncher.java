@@ -14,11 +14,15 @@ import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncherTemplate;
-import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+import org.eclipse.che.api.languageserver.shared.model.impl.DocumentFilterImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionImpl;
+import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 import org.eclipse.che.plugin.python.shared.ProjectAttributes;
 
 import javax.inject.Singleton;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,24 +38,18 @@ public class PythonLanguageSeverLauncher extends LanguageServerLauncherTemplate 
 
     private static final String[] EXTENSIONS  = new String[] {ProjectAttributes.PYTHON_EXT};
     private static final String[] MIME_TYPES  = new String[] {"text/x-python"};
-    private static final LanguageDescriptionImpl description;
+    private static final LanguageServerDescription DESCRIPTION = createServerDescription();
+    private static final String GLOB = "*.py";
 
     private final Path launchScript;
 
-    static {
-        description = new LanguageDescriptionImpl();
+    public PythonLanguageSeverLauncher(LanguageServerRegistry registry) {
+        launchScript = Paths.get(System.getenv("HOME"), "che/ls-python/launch.sh");
+        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
         description.setFileExtensions(asList(EXTENSIONS));
         description.setLanguageId(ProjectAttributes.PYTHON_ID);
         description.setMimeTypes(Arrays.asList(MIME_TYPES));
-    }
-
-    public PythonLanguageSeverLauncher() {
-        launchScript = Paths.get(System.getenv("HOME"), "che/ls-python/launch.sh");
-    }
-
-    @Override
-    public LanguageDescription getLanguageDescription() {
-        return description;
+        registry.registerLanguage(description);
     }
 
     @Override
@@ -77,5 +75,16 @@ public class PythonLanguageSeverLauncher extends LanguageServerLauncherTemplate 
         JsonBasedLanguageServer languageServer = new JsonBasedLanguageServer();
         languageServer.connect(languageServerProcess.getInputStream(), languageServerProcess.getOutputStream());
         return languageServer;
+    }
+    
+    @Override
+    public LanguageServerDescription getDescription() {
+        return DESCRIPTION;
+    }
+
+    private static LanguageServerDescription createServerDescription() {
+        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
+                        Arrays.asList(new DocumentFilterImpl(ProjectAttributes.PYTHON_ID, GLOB, null)));
+        return description;
     }
 }

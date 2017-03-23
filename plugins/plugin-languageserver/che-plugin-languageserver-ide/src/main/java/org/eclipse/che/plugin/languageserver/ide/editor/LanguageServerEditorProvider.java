@@ -80,7 +80,7 @@ public class LanguageServerEditorProvider implements AsyncEditorProvider, Editor
         if (file instanceof File) {
             File resource = (File) file;
 
-            registry.getOrInitializeServer(resource.getProject().getPath(), resource.getExtension(), resource.getLocation().toString());
+            registry.getOrInitializeServer(resource.getLocation().toString());
             final MessageLoader loader = loaderFactory.newLoader("Initializing Language Server for " + resource.getExtension());
             loader.show();
             try {

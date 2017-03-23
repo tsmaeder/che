@@ -10,13 +10,10 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor.signature;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.SignatureHelpDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.TextDocumentPositionParamsDTO;
 import org.eclipse.che.api.promises.client.Function;
@@ -33,6 +30,7 @@ import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.ide.api.editor.texteditor.TextEditorOperations;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
 
@@ -49,14 +47,17 @@ public class LanguageServerSignatureHelp implements SignatureHelpProvider {
     private final DtoBuildHelper            helper;
     private final NotificationManager       notificationManager;
     private       HandlerRegistration       handlerRegistration;
+    private LanguageServerRegistry lsRegistry;
 
     @Inject
     public LanguageServerSignatureHelp(TextDocumentServiceClient client,
                                        DtoBuildHelper helper,
-                                       NotificationManager notificationManager) {
+                                       NotificationManager notificationManager, 
+                                       LanguageServerRegistry lsRegistry) {
         this.client = client;
         this.helper = helper;
         this.notificationManager = notificationManager;
+        this.lsRegistry= lsRegistry;
     }
 
     @Override
@@ -83,19 +84,20 @@ public class LanguageServerSignatureHelp implements SignatureHelpProvider {
 
     @Override
     public void install(final TextEditor editor) {
-        if (capabilities.getSignatureHelpProvider() != null && capabilities.getSignatureHelpProvider().getTriggerCharacters() != null) {
-            final List<String> triggerCharacters = capabilities.getSignatureHelpProvider().getTriggerCharacters();
-            handlerRegistration = editor.getDocument().getDocumentHandle().getDocEventBus()
-                                        .addHandler(DocumentChangeEvent.TYPE, new DocumentChangeHandler() {
-                                            @Override
-                                            public void onDocumentChange(DocumentChangeEvent event) {
-                                                if (triggerCharacters.contains(event.getText())) {
-                                                    ((HandlesTextOperations)editor)
-                                                            .doOperation(TextEditorOperations.SIGNATURE_HELP);
-                                                }
-                                            }
-                                        });
-        }
+        handlerRegistration = editor.getDocument().getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE,
+                        new DocumentChangeHandler() {
+                            @Override
+                            public void onDocumentChange(DocumentChangeEvent event) {
+                                ServerCapabilities capabilities = lsRegistry.getCapabilities(event.getDocument().getDocument().getFile().getLocation().toString());
+                                if (capabilities.getSignatureHelpProvider() != null
+                                                && capabilities.getSignatureHelpProvider().getTriggerCharacters() != null) {
+                                    final List<String> triggerCharacters = capabilities.getSignatureHelpProvider().getTriggerCharacters();
+                                    if (triggerCharacters.contains(event.getText())) {
+                                        ((HandlesTextOperations) editor).doOperation(TextEditorOperations.SIGNATURE_HELP);
+                                    }
+                                }
+                            }
+                        });
     }
 
     @Override

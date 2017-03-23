@@ -9,7 +9,6 @@ package org.eclipse.che.api.languageserver.shared.lsapi;
 
 import io.typefox.lsapi.CompletionItem;
 import io.typefox.lsapi.CompletionItemKind;
-
 import org.eclipse.che.dto.shared.DTO;
 
 /**
@@ -22,9 +21,9 @@ public interface CompletionItemDTO extends CompletionItem {
      * The TextDocumentIdentifier for which this completion item was generated.
      * Used to select proper language server
      */
-    TextDocumentIdentifierDTO getTextDocumentIdentifier();
+    String getServerId();
 
-    void setTextDocumentIdentifier(TextDocumentIdentifierDTO identifier);
+    void setServerId(String id);
 
     /**
      * The label of this completion item. By default also the text that is

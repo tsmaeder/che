@@ -10,12 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-import io.typefox.lsapi.TextDocumentSyncKind;
-
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
+import io.typefox.lsapi.TextDocumentSyncKind;
 import org.eclipse.che.ide.api.editor.document.Document;
 import org.eclipse.che.ide.api.editor.events.DocumentChangeEvent;
 import org.eclipse.che.ide.api.editor.events.DocumentChangeHandler;
@@ -37,9 +33,8 @@ public class LanguageServerReconcileStrategy implements ReconcilingStrategy {
 
     @Inject
     public LanguageServerReconcileStrategy(TextDocumentSynchronizeFactory synchronizeFactory) {
-
-        TextDocumentSyncKind documentSync = serverCapabilities.getTextDocumentSync();
-        synchronize = synchronizeFactory.getSynchronize(documentSync);
+        // TODO: change to incremental when we have a document manager in the wsagent.
+        synchronize = synchronizeFactory.getSynchronize(TextDocumentSyncKind.Full);
     }
 
     @Override

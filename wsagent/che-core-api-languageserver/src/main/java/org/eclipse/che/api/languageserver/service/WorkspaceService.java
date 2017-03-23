@@ -10,32 +10,34 @@
  *******************************************************************************/
 package org.eclipse.che.api.languageserver.service;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.typefox.lsapi.Location;
 import io.typefox.lsapi.SymbolInformation;
 import io.typefox.lsapi.impl.LocationImpl;
-import io.typefox.lsapi.services.LanguageServer;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
+import org.eclipse.che.api.languageserver.registry.LSOperation;
 import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
 import org.eclipse.che.api.languageserver.registry.LanguageServerRegistryImpl;
 import org.eclipse.che.api.languageserver.shared.lsapi.WorkspaceSymbolParamsDTO;
+import org.eclipse.che.api.languageserver.shared.model.impl.InitializedServerImpl;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-import static java.util.Collections.emptyList;
-
 /**
- * REST API for the workspace/* services defined in https://github.com/Microsoft/vscode-languageserver-protocol
- * Dispatches onto the {@link LanguageServerRegistryImpl}.
+ * REST API for the workspace/* services defined in
+ * https://github.com/Microsoft/vscode-languageserver-protocol Dispatches onto
+ * the {@link LanguageServerRegistryImpl}.
  *
  * @author Evgen Vidolob
  */
@@ -53,25 +55,37 @@ public class WorkspaceService {
     @Path("symbol")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<? extends SymbolInformation> documentSymbol(WorkspaceSymbolParamsDTO workspaceSymbolParams) throws ExecutionException,
-                                                                                                                   InterruptedException,
-                                                                                                                   LanguageServerException {
-        LanguageServer server = getServer(TextDocumentService.prefixURI(workspaceSymbolParams.getFileUri()));
-        if (server == null) {
-            return emptyList();
-        }
+    public List<? extends SymbolInformation> documentSymbol(WorkspaceSymbolParamsDTO workspaceSymbolParams)
+                    throws ExecutionException, InterruptedException, LanguageServerException {
 
-        List<? extends SymbolInformation> informations = server.getWorkspaceService().symbol(workspaceSymbolParams).get();
-        informations.forEach(o -> {
-            Location location = o.getLocation();
-            if (location instanceof LocationImpl) {
-                ((LocationImpl)location).setUri(TextDocumentService.removePrefixUri(location.getUri()));
+        Collection<InitializedServerImpl> initializedServers = registry.getInitializedServers();
+        List<SymbolInformation> result = new ArrayList<>();
+
+        LanguageServerRegistryImpl.doInParallel(initializedServers, new LSOperation<InitializedServerImpl, List<? extends SymbolInformation>>() {
+
+            @Override
+            public boolean canDo(InitializedServerImpl element) {
+                return element.getInitializeResult().getCapabilities().isWorkspaceSymbolProvider();
             }
-        });
-        return informations;
-    }
 
-    private LanguageServer getServer(String uri) throws LanguageServerException {
-        return registry.findServer(uri);
+            @Override
+            public CompletableFuture<List<? extends SymbolInformation>> start(InitializedServerImpl element) {
+                return element.getServer().getWorkspaceService().symbol(workspaceSymbolParams);
+            }
+
+            @Override
+            public boolean handleResult(InitializedServerImpl element, List<? extends SymbolInformation> infos) {
+                infos.forEach(o -> {
+                    Location location = o.getLocation();
+                    if (location instanceof LocationImpl) {
+                        ((LocationImpl) location).setUri(TextDocumentService.removePrefixUri(location.getUri()));
+                    }
+                });            
+                result.addAll(infos);
+                return !infos.isEmpty();
+            }
+        }, 50000);
+
+        return result;
     }
 }

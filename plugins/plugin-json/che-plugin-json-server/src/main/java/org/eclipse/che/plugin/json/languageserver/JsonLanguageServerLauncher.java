@@ -10,20 +10,22 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.json.languageserver;
 
-import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
+import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncherTemplate;
-import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+import org.eclipse.che.api.languageserver.shared.model.impl.DocumentFilterImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionImpl;
+import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static java.util.Arrays.asList;
 
@@ -37,26 +39,21 @@ public class JsonLanguageServerLauncher extends LanguageServerLauncherTemplate {
     private static final String   LANGUAGE_ID = "json";
     private static final String[] EXTENSIONS  = new String[] {"json", "bowerrc", "jshintrc", "jscsrc", "eslintrc", "babelrc"};
     private static final String[] MIME_TYPES  = new String[] {"application/json"};
-    private static final LanguageDescriptionImpl description;
+    private static final String   GLOB  = "*.{json,bowerrc,jshintrc,jscsrc,eslintrc,babelrc}";
+    private static final LanguageServerDescription DESCRIPTION = createServerDescription();
 
     private final Path launchScript;
 
-    static {
-        description = new LanguageDescriptionImpl();
+    @Inject
+    public JsonLanguageServerLauncher(LanguageServerRegistry registry) {
+        launchScript = Paths.get(System.getenv("HOME"), "che/ls-json/launch.sh");
+        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
         description.setFileExtensions(asList(EXTENSIONS));
         description.setLanguageId(LANGUAGE_ID);
         description.setMimeTypes(asList(MIME_TYPES));
+        registry.registerLanguage(description);
     }
 
-    @Inject
-    public JsonLanguageServerLauncher() {
-        launchScript = Paths.get(System.getenv("HOME"), "che/ls-json/launch.sh");
-    }
-
-    @Override
-    public LanguageDescription getLanguageDescription() {
-        return description;
-    }
 
     @Override
     public boolean isAbleToLaunch() {
@@ -78,5 +75,16 @@ public class JsonLanguageServerLauncher extends LanguageServerLauncherTemplate {
         } catch (IOException e) {
             throw new LanguageServerException("Can't start JSON language server", e);
         }
+    }
+    
+    @Override
+    public LanguageServerDescription getDescription() {
+        return DESCRIPTION;
+    }
+
+    private static LanguageServerDescription createServerDescription() {
+        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
+                        Arrays.asList(new DocumentFilterImpl(LANGUAGE_ID, GLOB, null)));
+        return description;
     }
 }

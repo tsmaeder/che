@@ -10,30 +10,31 @@
  *******************************************************************************/
 package org.eclipse.che.api.languageserver.registry;
 
-import io.typefox.lsapi.services.LanguageServer;
-
-import org.eclipse.che.api.languageserver.exception.LanguageServerException;
-import org.eclipse.che.api.languageserver.shared.ProjectExtensionKey;
 import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
-import org.eclipse.che.commons.annotation.Nullable;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+import org.eclipse.che.api.languageserver.shared.model.impl.InitializedServerImpl;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Anatoliy Bazko
+ * @author Thomas Mäder
  */
 public interface LanguageServerRegistry {
     /**
-     * Finds appropriate language server according to file name.
+     * Returns all registered languages.
      */
-    @Nullable
-    LanguageServer findServer(String fileUri) throws LanguageServerException;
+    Collection<LanguageDescription> getLanguages();
+    void registerLanguage(LanguageDescription language);
+    
+    Collection<LanguageServerDescription> getRegisteredServers();
 
-    /**
-     * Returns all available servers.
-     */
-    List<LanguageDescription> getSupportedLanguages();
-
-    Map<ProjectExtensionKey, LanguageServerDescription> getInitializedLanguages();
+    Collection<InitializedServerImpl> getInitializedServers();
+    
+    void launchServers(String fileUri);
+    
+    List<Collection<InitializedServerImpl>> getApplicableLanguageServers(String fileUri);
+    
+    InitializedServerImpl getServer(String serverId);
 }

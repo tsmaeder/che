@@ -58,6 +58,9 @@
                 <configuration>
                     <excludes>
                         <exclude>**/lsapi/**</exclude>
+                        <exclude>**/model/LanguageServerDescription.java</exclude>
+                        <exclude>**/model/DocumentFilter.java</exclude>
+                        <exclude>**/model/InitializedServer.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

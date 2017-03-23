@@ -10,12 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.api.languageserver.registry;
 
+import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.services.LanguageServer;
-
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
+import org.eclipse.che.commons.lang.Pair;
 
-import java.util.Map;
+import java.util.Collection;
 
 /**
  * Is responsible to start new {@link LanguageServer}.
@@ -26,10 +28,10 @@ public interface ServerInitializer extends ServerInitializerObservable {
     /**
      * Initialize new {@link LanguageServer} with given project path.
      */
-    LanguageServer initialize(LanguageServerLauncher launcher, String projectPath) throws LanguageServerException;
+    void initialize(LanguageServerLauncher launcher) throws LanguageServerException;
 
     /**
      * Returns initialized servers.
      */
-    Map<LanguageServer, LanguageServerDescription> getInitializedServers();
+    Collection<Pair<LanguageServerDescription, InitializeResult>> getInitializedServers();
 }
