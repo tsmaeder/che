@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.python.languageserver;
 
+import com.google.inject.Inject;
 import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
@@ -21,6 +22,7 @@ import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionI
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 import org.eclipse.che.plugin.python.shared.ProjectAttributes;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 
 import java.io.IOException;
@@ -36,22 +38,16 @@ import static java.util.Arrays.asList;
 @Singleton
 public class PythonLanguageSeverLauncher extends LanguageServerLauncherTemplate {
 
-    private static final String[] EXTENSIONS  = new String[] {ProjectAttributes.PYTHON_EXT};
-    private static final String[] MIME_TYPES  = new String[] {"text/x-python"};
     private static final LanguageServerDescription DESCRIPTION = createServerDescription();
-    private static final String GLOB = "*.py";
+    private static final String REGEX = ".*\\.py";
 
     private final Path launchScript;
 
-    public PythonLanguageSeverLauncher(LanguageServerRegistry registry) {
+    @Inject
+    public PythonLanguageSeverLauncher() {
         launchScript = Paths.get(System.getenv("HOME"), "che/ls-python/launch.sh");
-        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
-        description.setFileExtensions(asList(EXTENSIONS));
-        description.setLanguageId(ProjectAttributes.PYTHON_ID);
-        description.setMimeTypes(Arrays.asList(MIME_TYPES));
-        registry.registerLanguage(description);
     }
-
+    
     @Override
     public boolean isAbleToLaunch() {
         return launchScript.toFile().exists();
@@ -62,6 +58,7 @@ public class PythonLanguageSeverLauncher extends LanguageServerLauncherTemplate 
         ProcessBuilder processBuilder = new ProcessBuilder(launchScript.toString());
         processBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
         try {
             return processBuilder.start();
@@ -83,8 +80,8 @@ public class PythonLanguageSeverLauncher extends LanguageServerLauncherTemplate 
     }
 
     private static LanguageServerDescription createServerDescription() {
-        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
-                        Arrays.asList(new DocumentFilterImpl(ProjectAttributes.PYTHON_ID, GLOB, null)));
+        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.python.languageserver", null,
+                        Arrays.asList(new DocumentFilterImpl(ProjectAttributes.PYTHON_ID, REGEX, null)));
         return description;
     }
 }

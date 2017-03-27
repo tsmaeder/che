@@ -12,12 +12,13 @@ package org.eclipse.che.plugin.python.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
+import org.eclipse.che.api.languageserver.registry.LanguageRegistrar;
 import org.eclipse.che.api.project.server.handlers.ProjectHandler;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.plugin.python.generator.PythonProjectGenerator;
+import org.eclipse.che.plugin.python.languageserver.PythonLanguage;
 import org.eclipse.che.plugin.python.languageserver.PythonLanguageSeverLauncher;
 import org.eclipse.che.plugin.python.projecttype.PythonProjectType;
 
@@ -37,5 +38,6 @@ public class PythonModule extends AbstractModule {
         projectHandlerMultibinder.addBinding().to(PythonProjectGenerator.class);
 
         Multibinder.newSetBinder(binder(), LanguageServerLauncher.class).addBinding().to(PythonLanguageSeverLauncher.class);
+        Multibinder.newSetBinder(binder(), LanguageRegistrar.class).addBinding().to(PythonLanguage.class);
     }
 }

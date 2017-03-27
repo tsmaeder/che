@@ -43,7 +43,6 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
     private final DtoBuildHelper            dtoBuildHelper;
     private final LanguageServerResources   resources;
     private final CompletionImageProvider   imageProvider;
-    private final ServerCapabilities serverCapabilities;
     private final TextDocumentServiceClient documentServiceClient;
     private final FuzzyMatches fuzzyMatches;
     private String lastErrorMessage;
@@ -54,13 +53,11 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
                                              DtoBuildHelper dtoBuildHelper,
                                              LanguageServerResources resources,
                                              CompletionImageProvider imageProvider,
-                                             @Assisted ServerCapabilities serverCapabilities,
                                              FuzzyMatches fuzzyMatches) {
         this.documentServiceClient = documentServiceClient;
         this.dtoBuildHelper = dtoBuildHelper;
         this.resources = resources;
         this.imageProvider = imageProvider;
-        this.serverCapabilities = serverCapabilities;
         this.fuzzyMatches = fuzzyMatches;
         this.latestCompletionResult = new LatestCompletionResult();
     }
@@ -145,7 +142,6 @@ public class LanguageServerCodeAssistProcessor implements CodeAssistProcessor {
                                                                         documentServiceClient,
                                                                         resources, 
                                                                         imageProvider.getIcon(item.getKind()), 
-                                                                        serverCapabilities,
                                                                         highlights,
                                                                         offset));
             }

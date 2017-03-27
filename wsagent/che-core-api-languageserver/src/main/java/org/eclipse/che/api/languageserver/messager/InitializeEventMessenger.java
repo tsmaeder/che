@@ -14,7 +14,7 @@ import com.google.gson.Gson;
 import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.services.LanguageServer;
 import org.eclipse.che.api.languageserver.DtoConverter;
-import org.eclipse.che.api.languageserver.registry.ServerInitializer;
+import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
 import org.eclipse.che.api.languageserver.registry.ServerInitializerObserver;
 import org.eclipse.che.api.languageserver.shared.event.LanguageServerInitializeEventDto;
 import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
@@ -40,12 +40,11 @@ import static org.eclipse.che.dto.server.DtoFactory.newDto;
 @Singleton
 public class InitializeEventMessenger implements ServerInitializerObserver {
     private final static Logger LOG = LoggerFactory.getLogger(InitializeEventMessenger.class);
-
-    private ServerInitializer initializer;
+    private LanguageServerRegistry registry;
 
     @Inject
-    public InitializeEventMessenger(ServerInitializer initializer) {
-        this.initializer = initializer;
+    public InitializeEventMessenger(LanguageServerRegistry registry) {
+        this.registry= registry;
     }
 
     @Override
@@ -63,12 +62,12 @@ public class InitializeEventMessenger implements ServerInitializerObserver {
 
     @PostConstruct
     public void addObserver() {
-        initializer.addObserver(this);
+        registry.addObserver(this);
     }
 
     @PreDestroy
     public void removeObserver() {
-        initializer.removeObserver(this);
+        registry.removeObserver(this);
     }
 
     protected void send(final LanguageServerInitializeEventDto message) {

@@ -18,7 +18,6 @@ import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncherTemplat
 import org.eclipse.che.api.languageserver.registry.LanguageServerRegistry;
 import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
 import org.eclipse.che.api.languageserver.shared.model.impl.DocumentFilterImpl;
-import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 import org.eclipse.che.commons.lang.IoUtil;
 
@@ -29,32 +28,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-import static java.util.Arrays.asList;
-
 /**
  * @author Evgen Vidolob
  */
 @Singleton
 public class CSharpLanguageServerLauncher extends LanguageServerLauncherTemplate {
-    private static final String GLOB = "*.{cs,csx}";
-    private static final String LANGUAGE_ID = "csharp";
-    private static final String[] EXTENSIONS = new String[] { "cs", "csx" };
-    private static final String[] MIME_TYPES = new String[] { "text/x-csharp" };
+    private static final String REGEX = ".*\\.(cs|csx)";
 
     private static final LanguageServerDescription DESCRIPTION = createServerDescription();
 
     private final Path launchScript;
 
     @Inject
-    public CSharpLanguageServerLauncher(LanguageServerRegistry registry) {
+    public CSharpLanguageServerLauncher() {
         launchScript = Paths.get(System.getenv("HOME"), "che/ls-csharp/launch.sh");
-
-        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
-        description.setFileExtensions(asList(EXTENSIONS));
-        description.setLanguageId(LANGUAGE_ID);
-        description.setMimeTypes(Arrays.asList(MIME_TYPES));
-        registry.registerLanguage(description);
     }
+
 
     @Override
     protected Process startLanguageServerProcess(String projectPath) throws LanguageServerException {
@@ -107,7 +96,7 @@ public class CSharpLanguageServerLauncher extends LanguageServerLauncherTemplate
 
     private static LanguageServerDescription createServerDescription() {
         LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
-                        Arrays.asList(new DocumentFilterImpl(LANGUAGE_ID, GLOB, null)));
+                        Arrays.asList(new DocumentFilterImpl(CSharpLanguage.LANGUAGE_ID, REGEX, null)));
         return description;
     }
 

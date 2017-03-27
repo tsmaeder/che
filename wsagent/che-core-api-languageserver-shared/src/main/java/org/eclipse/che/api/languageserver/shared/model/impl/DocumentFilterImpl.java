@@ -20,7 +20,7 @@ public class DocumentFilterImpl implements DocumentFilter {
     }
 
     @Override
-    public String getGlobPattern() {
+    public String getPathRegex() {
         return globPattern;
     }
 

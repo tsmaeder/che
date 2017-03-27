@@ -61,6 +61,8 @@
                         <exclude>**/model/LanguageServerDescription.java</exclude>
                         <exclude>**/model/DocumentFilter.java</exclude>
                         <exclude>**/model/InitializedServer.java</exclude>
+                         <exclude>**/model/impl/LanguageServerDescriptionImpl.java</exclude>
+                        <exclude>**/model/impl/DocumentFilterImpl.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

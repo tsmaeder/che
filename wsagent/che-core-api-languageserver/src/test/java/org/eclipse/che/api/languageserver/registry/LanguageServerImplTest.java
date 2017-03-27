@@ -70,7 +70,7 @@ public class LanguageServerImplTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
-        registry = spy(new LanguageServerRegistryImpl(Collections.singleton(launcher), pmProvider, publishDiagnosticsParamsMessenger, showMessageParamsMessenger));
+        registry = spy(new LanguageServerRegistryImpl(Collections.singleton(launcher), Collections.emptySet(), pmProvider, publishDiagnosticsParamsMessenger, showMessageParamsMessenger));
         LanguageDescriptionImpl ld = new LanguageDescriptionImpl();
         ld.setLanguageId("languageId");
         ld.setFileExtensions(Arrays.asList("foo"));

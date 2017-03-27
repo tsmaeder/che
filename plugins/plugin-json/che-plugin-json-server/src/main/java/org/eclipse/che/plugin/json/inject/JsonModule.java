@@ -14,8 +14,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
 import org.eclipse.che.inject.DynaModule;
+import org.eclipse.che.plugin.json.languageserver.JsonLanguage;
 import org.eclipse.che.plugin.json.languageserver.JsonLanguageServerLauncher;
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
+import org.eclipse.che.api.languageserver.registry.LanguageRegistrar;
 
 /**
  * @author Anatolii Bazko
@@ -25,5 +27,6 @@ public class JsonModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), LanguageServerLauncher.class).addBinding().to(JsonLanguageServerLauncher.class);
+        Multibinder.newSetBinder(binder(), LanguageRegistrar.class).addBinding().to(JsonLanguage.class);
     }
 }

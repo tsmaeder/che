@@ -141,7 +141,7 @@ public class DtoConverter {
     
     public static DocumentFilterDTO asDto(DocumentFilter documentFilter) {
         DocumentFilterDTO documentFilterDTO = newDto(DocumentFilterDTO.class);
-        documentFilterDTO.setGlobPattern(documentFilter.getGlobPattern());
+        documentFilterDTO.setPathRegex(documentFilter.getPathRegex());
         documentFilterDTO.setLanguageId(documentFilter.getLanguageId());
         documentFilterDTO.setScheme(documentFilter.getScheme());
         return documentFilterDTO;
@@ -175,6 +175,9 @@ public class DtoConverter {
 
 
     public static TextEditDTO asDto(TextEdit textEdit) {
+        if (textEdit == null) {
+            return null;
+        }
         TextEditDTO dto = newDto(TextEditDTO.class);
         dto.setNewText(textEdit.getNewText());
         dto.setRange(asDto(textEdit.getRange()));

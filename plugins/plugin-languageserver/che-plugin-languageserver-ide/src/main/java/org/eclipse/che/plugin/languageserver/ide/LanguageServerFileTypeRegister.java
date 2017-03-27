@@ -36,7 +36,6 @@ import org.eclipse.che.plugin.languageserver.ide.service.LanguageServerRegistryS
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import static com.google.common.collect.Lists.newArrayList;
 
@@ -118,7 +117,6 @@ public class LanguageServerFileTypeRegister implements WsAgentComponent {
                             config.setId(lang.getLanguageId() + ".highlighting");
                             config.setContentTypes(contentTypeId);
                             config.setPatterns(lang.getHighlightingConfiguration());
-                            Logger logger = Logger.getLogger(LanguageServerFileTypeRegister.class.getName());
                             contentTypeRegistrant.registerFileType(contentType, config);
                         }
                     }

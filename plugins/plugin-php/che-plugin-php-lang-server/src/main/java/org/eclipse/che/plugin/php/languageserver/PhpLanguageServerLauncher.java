@@ -24,6 +24,8 @@ import org.eclipse.che.api.languageserver.shared.model.impl.DocumentFilterImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 
+import javax.annotation.PostConstruct;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,29 +41,18 @@ import static java.util.Arrays.asList;
  */
 @Singleton
 public class PhpLanguageServerLauncher extends LanguageServerLauncherTemplate {
-    private static final String   LANGUAGE_ID = "php";
-    private static final String[] EXTENSIONS  = new String[] {"php"};
-    private static final String[] MIME_TYPES  = new String[] {"text/x-php"};
-    private static final String   GLOB = "*.php";
+    private static final String   REGEX = ".*\\.php";
 
     private final Path launchScript;
 
     private static final LanguageServerDescription DESCRIPTION = createServerDescription();
 
-    static {
-    }
 
     @Inject
-    public PhpLanguageServerLauncher(LanguageServerRegistry registry) {
+    public PhpLanguageServerLauncher() {
         this.launchScript = Paths.get(System.getenv("HOME"), "che/ls-php/launch.sh");
-        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
-        description.setFileExtensions(asList(EXTENSIONS));
-        description.setLanguageId(LANGUAGE_ID);
-        description.setMimeTypes(asList(MIME_TYPES));
-        registry.registerLanguage(description);
-
     }
-
+    
     @Override
     public boolean isAbleToLaunch() {
         return Files.exists(launchScript);
@@ -77,7 +68,8 @@ public class PhpLanguageServerLauncher extends LanguageServerLauncherTemplate {
         ProcessBuilder processBuilder = new ProcessBuilder(launchScript.toString());
         processBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        try {
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+       try {
             return processBuilder.start();
         } catch (IOException e) {
             throw new LanguageServerException("Can't start PHP language server", e);
@@ -90,8 +82,8 @@ public class PhpLanguageServerLauncher extends LanguageServerLauncherTemplate {
     }
 
     private static LanguageServerDescription createServerDescription() {
-        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
-                        Arrays.asList(new DocumentFilterImpl(LANGUAGE_ID, GLOB, null)));
+        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.php.languageserver", null,
+                        Arrays.asList(new DocumentFilterImpl(PhpLanguage.LANGUAGE_ID, REGEX, null)));
         return description;
     }
 }

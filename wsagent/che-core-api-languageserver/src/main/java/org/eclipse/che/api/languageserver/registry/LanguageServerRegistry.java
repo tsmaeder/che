@@ -21,7 +21,7 @@ import java.util.List;
  * @author Anatoliy Bazko
  * @author Thomas Mäder
  */
-public interface LanguageServerRegistry {
+public interface LanguageServerRegistry extends ServerInitializerObservable {
     /**
      * Returns all registered languages.
      */

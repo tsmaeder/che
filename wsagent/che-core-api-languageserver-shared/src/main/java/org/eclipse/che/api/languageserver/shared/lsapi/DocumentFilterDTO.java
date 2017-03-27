@@ -5,7 +5,7 @@ import org.eclipse.che.dto.shared.DTO;
 
 @DTO
 public interface DocumentFilterDTO extends DocumentFilter {
-    void setGlobPattern(String pattern);
+    void setPathRegex(String pattern);
 
     void setLanguageId(String languageId);
 

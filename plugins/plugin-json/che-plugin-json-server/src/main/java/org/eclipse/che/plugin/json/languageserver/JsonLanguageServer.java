@@ -11,7 +11,6 @@
 package org.eclipse.che.plugin.json.languageserver;
 
 import io.typefox.lsapi.InitializeResult;
-import io.typefox.lsapi.ServerCapabilities;
 import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
 import org.eclipse.che.api.languageserver.registry.ServerInitializerObserver;
@@ -33,7 +32,7 @@ import java.util.Map;
 public class JsonLanguageServer extends JsonBasedLanguageServer implements ServerInitializerObserver {
 
     private final static String JSON_SCHEMA_ASSOCIATIONS = "json/schemaAssociations";
-
+    
     @Override
     public void onServerInitialized(LanguageServer server, InitializeResult initResult,
             LanguageServerDescription languageDescription) {

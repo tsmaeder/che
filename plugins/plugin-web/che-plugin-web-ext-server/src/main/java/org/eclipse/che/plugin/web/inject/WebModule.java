@@ -12,11 +12,12 @@ package org.eclipse.che.plugin.web.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
+import org.eclipse.che.api.languageserver.registry.LanguageRegistrar;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.plugin.web.typescript.TSLSLauncher;
+import org.eclipse.che.plugin.web.typescript.TypeScriptLanguage;
 import org.eclipse.che.plugin.web.typescript.TypeScriptProjectType;
 
 /**
@@ -31,5 +32,6 @@ public class WebModule extends AbstractModule {
         projectTypeMultibinder.addBinding().to(TypeScriptProjectType.class);
 
         Multibinder.newSetBinder(binder(), LanguageServerLauncher.class).addBinding().to(TSLSLauncher.class);
-    }
+        Multibinder.newSetBinder(binder(), LanguageRegistrar.class).addBinding().to(TypeScriptLanguage.class);
+   }
 }

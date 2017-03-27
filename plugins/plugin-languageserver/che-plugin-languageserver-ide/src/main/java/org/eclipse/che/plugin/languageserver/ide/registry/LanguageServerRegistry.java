@@ -10,13 +10,16 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.registry;
 
+import com.google.gwt.regexp.shared.RegExp;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.event.LanguageServerInitializeEventDto;
 import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
-import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.languageserver.shared.model.DocumentFilter;
+import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
+import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
@@ -41,6 +44,7 @@ public class LanguageServerRegistry {
     private final EventBus eventBus;
     private final LanguageServerRegistryServiceClient client;
     private final List<InitializedServerDTO> initializedServers = new ArrayList<>();
+    private final List<LanguageDescription> registeredLanguages = new ArrayList<>();
 
     @Inject
     public LanguageServerRegistry(EventBus eventBus, LanguageServerRegistryServiceClient client) {
@@ -57,9 +61,10 @@ public class LanguageServerRegistry {
         eventBus.addHandler(WsAgentStateEvent.TYPE, new WsAgentStateHandler() {
             @Override
             public void onWsAgentStarted(WsAgentStateEvent event) {
-                Promise<List<InitializedServerDTO>> servers = client.getInitializedServers();
-
-                servers.then((s) -> {
+                client.getSupportedLanguages().then(languages -> {
+                    registeredLanguages.addAll(languages);
+                });
+                client.getInitializedServers().then((s) -> {
                     initializedServers.addAll(s);
                 });
             }
@@ -105,7 +110,77 @@ public class LanguageServerRegistry {
     }
 
     public ServerCapabilities getCapabilities(String path) {
-        // TODO Auto-generated method stub
+        LanguageDescription language = findLanguage(path);
+        return initializedServers.stream()
+                        .filter(server -> matchScore(server.getDescription(), path, language == null ? null : language.getLanguageId()) > 0)
+                        .map(server -> (ServerCapabilities)server.getInitializeResult().getCapabilities()).reduce(null, (left, right) -> {
+                            if (left == null) {
+                                return right;
+                            }
+                            return new ServerCapabilitiesOverlay(left, right);
+                        });
+    }
+
+    private LanguageDescription findLanguage(String fileUri) {
+        for (LanguageDescription language : registeredLanguages) {
+            for (String ext : language.getFileExtensions()) {
+                if (fileUri.endsWith("." + ext)) {
+                    return language;
+                }
+            }
+        }
         return null;
+    }
+
+    private int matchScore(LanguageServerDescription desc, String path, String languageId) {
+        int match = matchLanguageId(desc, languageId);
+        if (match == 10) {
+            return 10;
+        }
+
+        for (DocumentFilter filter : desc.getDocumentFilters()) {
+            if (filter.getLanguageId() != null && filter.getLanguageId().length() > 0) {
+                match = Math.max(match, matchLanguageId(filter.getLanguageId(), languageId));
+                if (match == 10) {
+                    return 10;
+                }
+            }
+            if (filter.getScheme() != null && path.startsWith(filter.getScheme() + ":")) {
+                return 10;
+            }
+            String pattern = filter.getPathRegex();
+            if (pattern != null) {
+                if (pattern.equals(path)) {
+                    return 10;
+                }
+                RegExp regex = RegExp.compile(pattern);
+                if (regex.test(path)) {
+                    match = Math.max(match, 5);
+                }
+            }
+        }
+        return match;
+    }
+
+    private int matchLanguageId(String id, String languageId) {
+        if (id.equals(languageId)) {
+            return 10;
+        } else if ("*".equals(id)) {
+            return 5;
+        }
+        return 0;
+    }
+
+    private int matchLanguageId(LanguageServerDescription desc, String languageId) {
+        int match = 0;
+        for (String id : desc.getLanguageIds()) {
+            if (id.equals(languageId)) {
+                match = 10;
+                break;
+            } else if ("*".equals(id)) {
+                match = 5;
+            }
+        }
+        return match;
     }
 }

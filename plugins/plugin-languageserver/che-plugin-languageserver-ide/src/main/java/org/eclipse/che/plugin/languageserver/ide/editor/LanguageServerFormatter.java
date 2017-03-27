@@ -10,11 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
+import io.typefox.lsapi.ServerCapabilities;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentFormattingParamsDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentOnTypeFormattingParamsDTO;
 import org.eclipse.che.api.languageserver.shared.lsapi.DocumentRangeFormattingParamsDTO;
@@ -41,6 +38,7 @@ import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.editor.preferences.editorproperties.EditorProperties;
 import org.eclipse.che.ide.editor.preferences.editorproperties.EditorPropertiesManager;
 import org.eclipse.che.ide.util.loging.Log;
+import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 
 import java.util.Collections;
@@ -52,49 +50,47 @@ import java.util.List;
 public class LanguageServerFormatter implements ContentFormatter {
 
     private final TextDocumentServiceClient client;
-    private final DtoFactory                dtoFactory;
-    private final NotificationManager       manager;
-    private final ServerCapabilities        capabilities;
-    private final EditorPropertiesManager   editorPropertiesManager;
-    private       TextEditor                editor;
+    private final DtoFactory dtoFactory;
+    private final NotificationManager manager;
+    private final EditorPropertiesManager editorPropertiesManager;
+    private TextEditor editor;
+    private LanguageServerRegistry registry;
 
     @Inject
-    public LanguageServerFormatter(TextDocumentServiceClient client,
-                                   DtoFactory dtoFactory,
-                                   NotificationManager manager,
-                                   @Assisted ServerCapabilities capabilities,
-                                   EditorPropertiesManager editorPropertiesManager) {
+    public LanguageServerFormatter(TextDocumentServiceClient client, DtoFactory dtoFactory, NotificationManager manager,
+                    EditorPropertiesManager editorPropertiesManager, LanguageServerRegistry registry) {
         this.client = client;
         this.dtoFactory = dtoFactory;
         this.manager = manager;
-        this.capabilities = capabilities;
         this.editorPropertiesManager = editorPropertiesManager;
+        this.registry = registry;
     }
 
     @Override
     public void format(Document document) {
-
+        ServerCapabilities capabilities = registry.getCapabilities(document.getFile().getLocation().toString());
         TextRange selectedRange = document.getSelectedTextRange();
-        if (selectedRange != null && !selectedRange.getFrom().equals(selectedRange.getTo()) &&
-            capabilities.isDocumentRangeFormattingProvider()) {
-            //selection formatting
+        if (selectedRange != null && !selectedRange.getFrom().equals(selectedRange.getTo())
+                        && capabilities.isDocumentRangeFormattingProvider()) {
+            // selection formatting
             formatRange(selectedRange, document);
         } else if (capabilities.isDocumentFormattingProvider()) {
-            //full document formatting
+            // full document formatting
             formatFullDocument(document);
         }
-
 
     }
 
     @Override
     public void install(TextEditor editor) {
         this.editor = editor;
-        if (capabilities.getDocumentOnTypeFormattingProvider() != null &&
-            capabilities.getDocumentOnTypeFormattingProvider().getFirstTriggerCharacter() != null) {
-            editor.getDocument().getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE, new DocumentChangeHandler() {
-                @Override
-                public void onDocumentChange(DocumentChangeEvent event) {
+        editor.getDocument().getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE, new DocumentChangeHandler() {
+            @Override
+            public void onDocumentChange(DocumentChangeEvent event) {
+                ServerCapabilities capabilities = registry
+                                .getCapabilities(event.getDocument().getDocument().getFile().getLocation().toString());
+                if (capabilities.getDocumentOnTypeFormattingProvider() != null
+                                && capabilities.getDocumentOnTypeFormattingProvider().getFirstTriggerCharacter() != null) {
                     if (capabilities.getDocumentOnTypeFormattingProvider().getFirstTriggerCharacter().equals(event.getText())) {
                         Document document = event.getDocument().getDocument();
 
@@ -117,8 +113,8 @@ public class LanguageServerFormatter implements ContentFormatter {
 
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     private void formatFullDocument(Document document) {
@@ -151,19 +147,20 @@ public class LanguageServerFormatter implements ContentFormatter {
         HandlesUndoRedo undoRedo = null;
 
         if (editor instanceof UndoableEditor) {
-            undoRedo = ((UndoableEditor)editor).getUndoRedo();
+            undoRedo = ((UndoableEditor) editor).getUndoRedo();
         }
         try {
             if (undoRedo != null) {
                 undoRedo.beginCompoundChange();
             }
-            
-            // #2437: apply the text edits from last to first to avoid messing up the document
+
+            // #2437: apply the text edits from last to first to avoid messing
+            // up the document
             Collections.reverse(edits);
             for (TextEditDTO change : edits) {
                 RangeDTO range = change.getRange();
-                document.replace(range.getStart().getLine(), range.getStart().getCharacter(),
-                                 range.getEnd().getLine(), range.getEnd().getCharacter(), change.getNewText());
+                document.replace(range.getStart().getLine(), range.getStart().getCharacter(), range.getEnd().getLine(),
+                                range.getEnd().getCharacter(), change.getNewText());
             }
         } catch (final Exception e) {
             Log.error(getClass(), e);

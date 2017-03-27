@@ -18,12 +18,16 @@ import org.eclipse.che.dto.shared.DTO;
 public interface CompletionItemDTO extends CompletionItem {
 
     /**
-     * The TextDocumentIdentifier for which this completion item was generated.
-     * Used to select proper language server
+     * The server that generated this completion item. 
      */
     String getServerId();
-
     void setServerId(String id);
+    
+    /**
+     * 
+     */
+    boolean getCanResolve();
+    void setCanResolve(boolean resolve);
 
     /**
      * The label of this completion item. By default also the text that is

@@ -122,9 +122,14 @@ public class TextDocumentService {
                             result.getItems().forEach(item -> {
                                 CompletionItemDTO dto = DtoConverter.asDto(item);
                                 dto.setServerId(element.getDescription().getId());
+                                dto.setCanResolve(truish(element.getInitializeResult().getCapabilities().getCompletionProvider().getResolveProvider()));
                                 items.add(dto);
                             });
                             return !result.getItems().isEmpty();
+                        }
+
+                        private boolean truish(Boolean value) {
+                            return value != null && value;
                         }
                     }, 5000);
                     list.setItems(items);
@@ -142,6 +147,7 @@ public class TextDocumentService {
 
         };
         LanguageServerRegistryImpl.doInSequence(languageServerRegistry.getApplicableLanguageServers(textDocumentPositionParams.getTextDocument().getUri()), op, 5000);
+        result.setItems(items);
         return result;
     }
 

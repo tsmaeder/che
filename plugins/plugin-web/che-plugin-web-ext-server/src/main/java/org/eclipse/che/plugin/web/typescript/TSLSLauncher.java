@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.web.typescript;
 
+import com.google.inject.Inject;
 import io.typefox.lsapi.services.LanguageServer;
 import io.typefox.lsapi.services.json.JsonBasedLanguageServer;
 import org.eclipse.che.api.languageserver.exception.LanguageServerException;
@@ -21,6 +22,7 @@ import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionI
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
 import org.eclipse.che.plugin.web.shared.Constants;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
 
 import java.io.IOException;
@@ -36,32 +38,22 @@ import static java.util.Arrays.asList;
  */
 @Singleton
 public class TSLSLauncher extends LanguageServerLauncherTemplate {
-    private static final String[] EXTENSIONS  = new String[] {Constants.TS_EXT};
-    private static final String[] MIME_TYPES  = new String[] {Constants.TS_MIME_TYPE};
-    private static final String   GLOB = "*.ts";
+    private static final String   REGEX = ".*\\.ts";
     private static final LanguageServerDescription DESCRIPTION = createServerDescription();
     
     private final Path launchScript;
 
-    public TSLSLauncher(LanguageServerRegistry registry) {
+    @Inject
+    public TSLSLauncher() {
         launchScript =  Paths.get(System.getenv("HOME"), "che/ls-typescript/launch.sh");
-        LanguageDescriptionImpl description = new LanguageDescriptionImpl();
-        description.setFileExtensions(asList(EXTENSIONS));
-        description.setLanguageId(Constants.TS_LANG);
-        description.setMimeTypes(asList(MIME_TYPES));
-        description.setHighlightingConfiguration("[\n" +
-                                                 "  {\"include\":\"orion.js\"},\n" +
-                                                 "  {\"match\":\"\\\\b(?:constructor|declare|module)\\\\b\",\"name\" :\"keyword.operator.typescript\"},\n" +
-                                                 "  {\"match\":\"\\\\b(?:any|boolean|number|string)\\\\b\",\"name\" : \"storage.type.typescript\"}\n" +
-                                                 "]");
-        registry.registerLanguage(description);
     }
-
+    
     @Override
     protected Process startLanguageServerProcess(String projectPath) throws LanguageServerException {
         ProcessBuilder processBuilder = new ProcessBuilder(launchScript.toString());
         processBuilder.redirectInput(ProcessBuilder.Redirect.PIPE);
         processBuilder.redirectOutput(ProcessBuilder.Redirect.PIPE);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         try {
             return processBuilder.start();
         } catch (IOException e) {
@@ -88,8 +80,8 @@ public class TSLSLauncher extends LanguageServerLauncherTemplate {
     }
 
     private static LanguageServerDescription createServerDescription() {
-        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.csharp.languageserver", null,
-                        Arrays.asList(new DocumentFilterImpl(Constants.TS_LANG, GLOB, null)));
+        LanguageServerDescriptionImpl description = new LanguageServerDescriptionImpl("org.eclipse.che.plugin.web.typescript", null,
+                        Arrays.asList(new DocumentFilterImpl(Constants.TS_LANG, REGEX, null)));
         return description;
     }
 

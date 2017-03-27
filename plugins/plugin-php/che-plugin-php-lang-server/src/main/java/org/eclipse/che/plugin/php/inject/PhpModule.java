@@ -12,11 +12,12 @@ package org.eclipse.che.plugin.php.inject;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
+import org.eclipse.che.api.languageserver.registry.LanguageRegistrar;
 import org.eclipse.che.api.project.server.handlers.ProjectHandler;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.inject.DynaModule;
+import org.eclipse.che.plugin.php.languageserver.PhpLanguage;
 import org.eclipse.che.plugin.php.languageserver.PhpLanguageServerLauncher;
 import org.eclipse.che.plugin.php.projecttype.PhpProjectGenerator;
 import org.eclipse.che.plugin.php.projecttype.PhpProjectType;
@@ -37,5 +38,6 @@ public class PhpModule extends AbstractModule {
         projectHandlerMultibinder.addBinding().to(PhpProjectGenerator.class);
 
         Multibinder.newSetBinder(binder(), LanguageServerLauncher.class).addBinding().to(PhpLanguageServerLauncher.class);
+        Multibinder.newSetBinder(binder(), LanguageRegistrar.class).addBinding().to(PhpLanguage.class);
     }
 }
