@@ -165,7 +165,7 @@ public class DtoConverter {
         dto.setDetail(c.getDetail());
         dto.setDocumentation(c.getDocumentation());
         dto.setFilterText(c.getFilterText());
-        dto.setInsertText(c.getFilterText());
+        dto.setInsertText(c.getInsertText());
         dto.setKind(c.getKind());
         dto.setLabel(c.getLabel());
         dto.setSortText(c.getSortText());

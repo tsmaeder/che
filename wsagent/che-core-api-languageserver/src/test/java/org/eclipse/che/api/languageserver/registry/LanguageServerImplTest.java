@@ -10,7 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.api.languageserver.registry;
 
-import com.google.inject.Provider;
 import io.typefox.lsapi.InitializeParams;
 import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.services.LanguageServer;
@@ -22,9 +21,6 @@ import org.eclipse.che.api.languageserver.messager.ShowMessageMessenger;
 import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageDescriptionImpl;
 import org.eclipse.che.api.languageserver.shared.model.impl.LanguageServerDescriptionImpl;
-import org.eclipse.che.api.project.server.FolderEntry;
-import org.eclipse.che.api.project.server.ProjectManager;
-import org.eclipse.che.api.vfs.impl.memory.MemoryVirtualFileSystem;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.testng.MockitoTestNGListener;
@@ -61,16 +57,11 @@ public class LanguageServerImplTest {
     @Mock
     private LanguageServer                      server;
 
-    @Mock
-    private Provider<ProjectManager> pmProvider;
-    @Mock
-    private ProjectManager projectManager;
-    
     private LanguageServerRegistryImpl registry; 
 
     @BeforeMethod
     public void setUp() throws Exception {
-        registry = spy(new LanguageServerRegistryImpl(Collections.singleton(launcher), Collections.emptySet(), pmProvider, publishDiagnosticsParamsMessenger, showMessageParamsMessenger));
+        registry = spy(new LanguageServerRegistryImpl(Collections.singleton(launcher), Collections.emptySet(), publishDiagnosticsParamsMessenger, showMessageParamsMessenger));
         LanguageDescriptionImpl ld = new LanguageDescriptionImpl();
         ld.setLanguageId("languageId");
         ld.setFileExtensions(Arrays.asList("foo"));
@@ -84,9 +75,6 @@ public class LanguageServerImplTest {
         when(server.getTextDocumentService()).thenReturn(mock(TextDocumentService.class));
         when(server.getWindowService()).thenReturn(mock(WindowService.class));
         
-        when(pmProvider.get()).thenReturn(projectManager);
-        when(projectManager.getProjectsRoot()).thenReturn(new FolderEntry(new MemoryVirtualFileSystem(null, null).getRoot()));
-
         LanguageServerDescriptionImpl lsd = new LanguageServerDescriptionImpl("serverId", Arrays.asList("languageId"), Collections.emptyList());
         when(launcher.getDescription()).thenReturn(lsd);
         when(launcher.isAbleToLaunch()).thenReturn(true);

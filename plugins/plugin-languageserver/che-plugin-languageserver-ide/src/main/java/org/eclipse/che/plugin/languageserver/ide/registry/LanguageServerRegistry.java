@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 import io.typefox.lsapi.ServerCapabilities;
+import org.eclipse.che.api.languageserver.shared.dto.DtoClientImpls.ServerCapabilitiesDTOImpl;
 import org.eclipse.che.api.languageserver.shared.event.LanguageServerInitializeEventDto;
 import org.eclipse.che.api.languageserver.shared.lsapi.InitializedServerDTO;
 import org.eclipse.che.api.languageserver.shared.model.DocumentFilter;
@@ -113,10 +114,7 @@ public class LanguageServerRegistry {
         LanguageDescription language = findLanguage(path);
         return initializedServers.stream()
                         .filter(server -> matchScore(server.getDescription(), path, language == null ? null : language.getLanguageId()) > 0)
-                        .map(server -> (ServerCapabilities)server.getInitializeResult().getCapabilities()).reduce(null, (left, right) -> {
-                            if (left == null) {
-                                return right;
-                            }
+                        .map(server -> (ServerCapabilities)server.getInitializeResult().getCapabilities()).reduce(ServerCapabilitiesDTOImpl.make(), (left, right) -> {
                             return new ServerCapabilitiesOverlay(left, right);
                         });
     }

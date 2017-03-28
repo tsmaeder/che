@@ -11,7 +11,6 @@
 package org.eclipse.che.api.languageserver.registry;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import io.typefox.lsapi.InitializeResult;
 import io.typefox.lsapi.MessageType;
@@ -27,7 +26,6 @@ import org.eclipse.che.api.languageserver.shared.model.DocumentFilter;
 import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
 import org.eclipse.che.api.languageserver.shared.model.LanguageServerDescription;
 import org.eclipse.che.api.languageserver.shared.model.impl.InitializedServerImpl;
-import org.eclipse.che.api.project.server.ProjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +42,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -56,13 +53,9 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class LanguageServerRegistryImpl implements LanguageServerRegistry {
-    /**
-     * Started {@link LanguageServer} by project.
-     */
-    private final Provider<ProjectManager> projectManagerProvider;
 
     private Set<LanguageServerLauncher> launchers;
-    private Set<LanguageServerLauncher> launchedServers = new ConcurrentSkipListSet<>();
+    private Set<LanguageServerLauncher> launchedServers = new HashSet<>();
 
     private final static Logger LOG = LoggerFactory.getLogger(LanguageServerRegistryImpl.class);
     private static final int PROCESS_ID = getProcessId();
@@ -73,7 +66,6 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
     private final ShowMessageMessenger showMessageMessenger;
 
     private final ConcurrentHashMap<String, LanguageServer> serversById;
-    private final Set<LanguageServerDescription> registeredServers;
 
     private List<LanguageDescription> languages;
 
@@ -81,17 +73,14 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
 
     @Inject
     public LanguageServerRegistryImpl(Set<LanguageServerLauncher> languageServerLaunchers, Set<LanguageRegistrar> registrars,
-                    Provider<ProjectManager> projectManagerProvider, PublishDiagnosticsParamsMessenger publishDiagnosticsParamsMessenger,
-                    ShowMessageMessenger showMessageMessenger) {
-        this.launchers = languageServerLaunchers;
+                    PublishDiagnosticsParamsMessenger publishDiagnosticsParamsMessenger, ShowMessageMessenger showMessageMessenger) {
+        this.launchers = new HashSet<>(languageServerLaunchers);
         this.languages = new ArrayList<>();
         this.launchedServers = new HashSet<>();
-        this.projectManagerProvider = projectManagerProvider;
         this.publishDiagnosticsParamsMessenger = publishDiagnosticsParamsMessenger;
         this.showMessageMessenger = showMessageMessenger;
         this.observers = new ArrayList<>();
         this.serversById = new ConcurrentHashMap<>();
-        this.registeredServers = languageServerLaunchers.stream().map(launcher -> launcher.getDescription()).collect(Collectors.toSet());
         this.initializedServers = new ArrayList<>();
         registrars.forEach(r -> r.register(this));
     }
@@ -99,18 +88,54 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
     public void launchServers(String fileUri) {
         LanguageDescription language = findLanguage(fileUri);
         for (LanguageServerLauncher launcher : launchers) {
-            if (!launchedServers.contains(launcher)
-                            && matchScore(launcher.getDescription(), fileUri, language != null ? language.getLanguageId() : null) > 0) {
-                initialize(launcher);
+            boolean shouldLaunch = false;
+            synchronized (launchedServers) {
+                shouldLaunch = !launchedServers.contains(launcher)
+                                && matchScore(launcher.getDescription(), fileUri, language != null ? language.getLanguageId() : null) > 0;
+                launchedServers.add(launcher);
+            }
+            if (shouldLaunch) {
+                CompletableFuture.runAsync(() -> {
+                    if (!launcher.isAbleToLaunch()) {
+                        showMessageMessenger.onEvent(new MessageParamsImpl(MessageType.Error,
+                                        "Failed to launch language server " + launcher.getDescription().getId()));
+                        return;
+                    }
+                    LanguageServerDescription description = launcher.getDescription();
+                    try {
+                        String rootPath = "/projects";
+                        LanguageServer server = launcher.launch(rootPath);
+                        this.serversById.put(description.getId(), server);
+
+                        registerCallbacks(server);
+                        InitializeParamsImpl initializeParams = prepareInitializeParams(rootPath);
+                        InitializeResult initializeResult = server.initialize(initializeParams).get();
+                        onServerInitialized(server, initializeResult, description);
+                        synchronized (initializedServers) {
+                            initializedServers.add(new InitializedServerImpl(description, server, initializeResult));
+                        }
+                        LOG.info("Initialized Language Server {}", launcher.getDescription().getId());
+                    } catch (ServerException | ExecutionException e) {
+                        showMessageMessenger.onEvent(new MessageParamsImpl(MessageType.Error,
+                                        "Failed to launch language server " + launcher.getDescription().getId()));
+                        LOG.error("Failed to launch language server " + launcher.getDescription().getId(), e);
+                    } catch (InterruptedException e) {
+                        LOG.info("Thread interrupted: ", e);
+                        Thread.currentThread().interrupt();
+                    }
+
+                });
             }
         }
     }
 
     private LanguageDescription findLanguage(String fileUri) {
-        for (LanguageDescription language : languages) {
-            for (String ext : language.getFileExtensions()) {
-                if (fileUri.endsWith("." + ext)) {
-                    return language;
+        synchronized (languages) {
+            for (LanguageDescription language : languages) {
+                for (String ext : language.getFileExtensions()) {
+                    if (fileUri.endsWith("." + ext)) {
+                        return language;
+                    }
                 }
             }
         }
@@ -119,7 +144,9 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
 
     @Override
     public List<LanguageDescription> getLanguages() {
-        return languages;
+        synchronized (languages) {
+            return Collections.unmodifiableList(languages);
+        }
     }
 
     private static int getProcessId() {
@@ -138,43 +165,24 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
     }
 
     public void addObserver(ServerInitializerObserver observer) {
-        observers.add(observer);
+        synchronized (observers) {
+            observers.add(observer);
+        }
     }
 
     public void removeObserver(ServerInitializerObserver observer) {
-        observers.remove(observer);
+        synchronized (observers) {
+            observers.remove(observer);
+        }
     }
 
-    private void initialize(LanguageServerLauncher launcher) {
-        launchedServers.add(launcher);
-        CompletableFuture.runAsync(() -> {
-            if (!launcher.isAbleToLaunch()) {
-                showMessageMessenger.onEvent(new MessageParamsImpl(MessageType.Error,
-                                "Failed to launch language server " + launcher.getDescription().getId()));
-                return;
-            }
-            LanguageServerDescription description = launcher.getDescription();
-            try {
-                String rootPath = "/projects";
-                LanguageServer server = launcher.launch(rootPath);
-                this.serversById.put(description.getId(), server);
-
-                registerCallbacks(server);
-                InitializeParamsImpl initializeParams = prepareInitializeParams(rootPath);
-                InitializeResult initializeResult = server.initialize(initializeParams).get();
-                onServerInitialized(server, initializeResult, description);
-                initializedServers.add(new InitializedServerImpl(description, server, initializeResult));
-                LOG.info("Initialized Language Server {}", launcher.getDescription().getId());
-            } catch (ServerException | ExecutionException e) {
-                showMessageMessenger.onEvent(new MessageParamsImpl(MessageType.Error,
-                                "Failed to launch language server " + launcher.getDescription().getId()));
-                LOG.error("Failed to launch language server " + launcher.getDescription().getId(), e);
-            } catch (InterruptedException e) {
-                LOG.info("Thread interrupted: ", e);
-                Thread.currentThread().interrupt();
-            }
-
-        });
+    protected void onServerInitialized(LanguageServer server, InitializeResult initResult,
+                    LanguageServerDescription languageServerDescription) {
+        List<ServerInitializerObserver> list = null;
+        synchronized (observers) {
+            list = new ArrayList<>(observers);
+        }
+        list.forEach(observer -> observer.onServerInitialized(server, initResult, languageServerDescription));
     }
 
     private void registerCallbacks(LanguageServer server) {
@@ -197,11 +205,6 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
         return initializeParams;
     }
 
-    protected void onServerInitialized(LanguageServer server, InitializeResult initResult,
-                    LanguageServerDescription languageServerDescription) {
-        observers.forEach(observer -> observer.onServerInitialized(server, initResult, languageServerDescription));
-    }
-
     @PreDestroy
     protected void shutdown() {
         for (LanguageServer server : serversById.values()) {
@@ -211,20 +214,19 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
     }
 
     @Override
-    public Collection<LanguageServerDescription> getRegisteredServers() {
-        return registeredServers;
-    }
-
-    @Override
     public Collection<InitializedServerImpl> getInitializedServers() {
-        return Collections.unmodifiableCollection(initializedServers);
+        synchronized (initializedServers) {
+            return Collections.unmodifiableCollection(initializedServers);
+        }
     }
 
     @Override
     public InitializedServerImpl getServer(String serverId) {
-        for (InitializedServerImpl server : initializedServers) {
-            if (server.getDescription().getId().equals(serverId)) {
-                return server;
+        synchronized (initializedServers) {
+            for (InitializedServerImpl server : initializedServers) {
+                if (server.getDescription().getId().equals(serverId)) {
+                    return server;
+                }
             }
         }
         return null;
@@ -232,24 +234,30 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
 
     @Override
     public void registerLanguage(LanguageDescription language) {
-        languages.add(language);
+        synchronized (languages) {
+            languages.add(language);
+        }
     }
 
     public List<Collection<InitializedServerImpl>> getApplicableLanguageServers(String fileUri) {
         LanguageDescription language = findLanguage(fileUri);
-        Map<Integer, List<InitializedServerImpl>> servers = new HashMap<>();
-        for (InitializedServerImpl server : initializedServers) {
+        Map<Integer, List<InitializedServerImpl>> result = new HashMap<>();
+        List<InitializedServerImpl> servers = null;
+        synchronized (initializedServers) {
+            servers = new ArrayList<>(initializedServers);
+        }
+        for (InitializedServerImpl server : servers) {
             int score = matchScore(server.getDescription(), fileUri, language.getLanguageId());
             if (score > 0) {
-                List<InitializedServerImpl> list = servers.get(score);
+                List<InitializedServerImpl> list = result.get(score);
                 if (list == null) {
                     list = new ArrayList<>();
-                    servers.put(score, list);
+                    result.put(score, list);
                 }
                 list.add(server);
             }
         }
-        return servers.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(entry -> entry.getValue()).collect(Collectors.toList());
+        return result.entrySet().stream().sorted(Map.Entry.comparingByKey()).map(entry -> entry.getValue()).collect(Collectors.toList());
     }
 
     public static <C, R> void doInParallel(Collection<C> collection, LSOperation<C, R> op, long timeoutMillis) {
@@ -264,12 +272,14 @@ public class LanguageServerRegistryImpl implements LanguageServerRegistry {
                     lock.notifyAll();
                 }
                 future.thenAccept(result -> {
-                    op.handleResult(element, result);
                     synchronized (lock) {
-                        pendingResponses.remove(future);
-                        lock.notifyAll();
+                        if (!future.isCancelled()) {
+                            op.handleResult(element, result);
+                            pendingResponses.remove(future);
+                            lock.notifyAll();
+                        }
                     }
-                }).exceptionally((t)-> {
+                }).exceptionally((t) -> {
                     LOG.info("Exception occurred in request", t);
                     synchronized (lock) {
                         pendingResponses.remove(future);

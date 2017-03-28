@@ -28,8 +28,6 @@ public interface LanguageServerRegistry extends ServerInitializerObservable {
     Collection<LanguageDescription> getLanguages();
     void registerLanguage(LanguageDescription language);
     
-    Collection<LanguageServerDescription> getRegisteredServers();
-
     Collection<InitializedServerImpl> getInitializedServers();
     
     void launchServers(String fileUri);

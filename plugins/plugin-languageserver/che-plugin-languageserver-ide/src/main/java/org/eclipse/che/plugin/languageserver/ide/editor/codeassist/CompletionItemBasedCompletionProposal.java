@@ -194,11 +194,14 @@ public class CompletionItemBasedCompletionProposal implements CompletionProposal
 
         @Override
         public LinearRange getSelection(Document document) {
-            RangeDTO range = completionItem.getTextEdit().getRange();
-            int startOffset = document
-                                      .getIndexFromPosition(new TextPosition(range.getStart().getLine(), range.getStart().getCharacter()))
-                              + completionItem.getTextEdit().getNewText().length();
-            return LinearRange.createWithStart(startOffset).andLength(0);
+            if (completionItem.getTextEdit() != null) {
+                RangeDTO range = completionItem.getTextEdit().getRange();
+                int startOffset = document
+                                          .getIndexFromPosition(new TextPosition(range.getStart().getLine(), range.getStart().getCharacter()))
+                                  + completionItem.getTextEdit().getNewText().length();
+                return LinearRange.createWithStart(startOffset).andLength(0);
+            } 
+            return null;
         }
 
     }
