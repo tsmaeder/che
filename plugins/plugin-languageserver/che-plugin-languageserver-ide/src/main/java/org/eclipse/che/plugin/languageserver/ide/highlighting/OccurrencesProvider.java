@@ -26,7 +26,6 @@ import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
 import org.eclipse.che.ide.editor.orion.client.OrionOccurrencesHandler;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionOccurrenceContextOverlay;
 import org.eclipse.che.ide.editor.orion.client.jso.OrionOccurrenceOverlay;
-import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerEditorConfiguration;
 import org.eclipse.che.plugin.languageserver.ide.registry.LanguageServerRegistry;
 import org.eclipse.che.plugin.languageserver.ide.service.TextDocumentServiceClient;
 import org.eclipse.che.plugin.languageserver.ide.util.DtoBuildHelper;
@@ -67,7 +66,7 @@ public class OccurrencesProvider implements OrionOccurrencesHandler {
         }
         final TextEditor editor = ((TextEditor)activeEditor);
         
-        ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile().getLocation().toString());
+        ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile());
         if (capabilities.isDocumentHighlightProvider() == null || !capabilities.isDocumentHighlightProvider()) {
             return null;
         }

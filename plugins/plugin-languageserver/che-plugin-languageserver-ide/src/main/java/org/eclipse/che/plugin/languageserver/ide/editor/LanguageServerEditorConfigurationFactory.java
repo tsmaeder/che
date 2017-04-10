@@ -10,8 +10,6 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.languageserver.ide.editor;
 
-import io.typefox.lsapi.ServerCapabilities;
-
 /**
  * @author Evgen Vidolob
  */

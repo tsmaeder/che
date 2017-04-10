@@ -43,7 +43,7 @@ public class LanguageServerReconcileStrategy implements ReconcilingStrategy {
         document.getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE, new DocumentChangeHandler() {
             @Override
             public void onDocumentChange(DocumentChangeEvent event) {
-                ServerCapabilities capabilities = registry.getCapabilities(event.getDocument().getDocument().getFile().getLocation().toString());
+                ServerCapabilities capabilities = registry.getCapabilities(event.getDocument().getDocument().getFile());
                 synchronizeFactory.getSynchronize(capabilities.getTextDocumentSync()).syncTextDocument(event, ++version);
             }
         });

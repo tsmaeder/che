@@ -68,7 +68,7 @@ public class LanguageServerFormatter implements ContentFormatter {
 
     @Override
     public void format(Document document) {
-        ServerCapabilities capabilities = registry.getCapabilities(document.getFile().getLocation().toString());
+        ServerCapabilities capabilities = registry.getCapabilities(document.getFile());
         TextRange selectedRange = document.getSelectedTextRange();
         if (selectedRange != null && !selectedRange.getFrom().equals(selectedRange.getTo())
                         && capabilities.isDocumentRangeFormattingProvider()) {
@@ -88,7 +88,7 @@ public class LanguageServerFormatter implements ContentFormatter {
         editor.getDocument().getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE, new DocumentChangeHandler() {
             @Override
             public void onDocumentChange(DocumentChangeEvent event) {
-                ServerCapabilities capabilities = registry.getCapabilities(event.getDocument().getDocument().getFile().getLocation().toString());
+                ServerCapabilities capabilities = registry.getCapabilities(event.getDocument().getDocument().getFile());
                 if (capabilities.getDocumentOnTypeFormattingProvider() != null
                                 && capabilities.getDocumentOnTypeFormattingProvider().getFirstTriggerCharacter() != null) {
                     if (capabilities.getDocumentOnTypeFormattingProvider().getFirstTriggerCharacter().equals(event.getText())) {

@@ -66,7 +66,7 @@ public class FindReferencesAction extends AbstractPerspectiveAction {
             // be enabled.
 
             TextEditor editor = (TextEditor) activeEditor;
-            ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile().getLocation().toString());
+            ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile());
             event.getPresentation()
                             .setEnabledAndVisible(capabilities.isReferencesProvider() != null && capabilities.isReferencesProvider());
             return;

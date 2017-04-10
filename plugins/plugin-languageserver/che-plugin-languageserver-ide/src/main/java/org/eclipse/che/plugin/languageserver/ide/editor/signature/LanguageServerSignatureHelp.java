@@ -81,11 +81,11 @@ public class LanguageServerSignatureHelp implements SignatureHelpProvider {
 
     @Override
     public void install(final TextEditor editor) {
-        ServerCapabilities capabilities = registry.getCapabilities(editor.getDocument().getFile().getLocation().toString());
         handlerRegistration = editor.getDocument().getDocumentHandle().getDocEventBus().addHandler(DocumentChangeEvent.TYPE,
             new DocumentChangeHandler() {
                 @Override
                 public void onDocumentChange(DocumentChangeEvent event) {
+                    ServerCapabilities capabilities = registry.getCapabilities(event.getDocument().getDocument().getFile());
                     if (capabilities.getSignatureHelpProvider() != null
                                     && capabilities.getSignatureHelpProvider().getTriggerCharacters() != null) {
                         final List<String> triggerCharacters = capabilities.getSignatureHelpProvider().getTriggerCharacters();

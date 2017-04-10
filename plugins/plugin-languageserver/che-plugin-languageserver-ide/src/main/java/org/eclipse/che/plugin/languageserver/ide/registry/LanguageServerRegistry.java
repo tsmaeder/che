@@ -28,6 +28,8 @@ import org.eclipse.che.ide.api.machine.events.WsAgentStateEvent;
 import org.eclipse.che.ide.api.machine.events.WsAgentStateHandler;
 import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
+import org.eclipse.che.ide.api.resources.File;
+import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.util.loging.Log;
 import org.eclipse.che.ide.websocket.MessageBus;
@@ -48,7 +50,7 @@ import static org.eclipse.che.api.languageserver.shared.ProjectExtensionKey.crea
  */
 @Singleton
 public class LanguageServerRegistry {
-    private static final ServerCapabilities NO_CAPABILITIES = ServerCapabilitiesDTOImpl.make();
+    private static final ServerCapabilities                  NO_CAPABILITIES = ServerCapabilitiesDTOImpl.make();
     private final EventBus                                   eventBus;
     private final LanguageServerRegistryServiceClient        client;
 
@@ -142,26 +144,20 @@ public class LanguageServerRegistry {
         });
     }
 
-    public ServerCapabilities getCapabilities(String filePath) {
-        String projectPath = getProjectPath(filePath);
-        String extension= getExtension(filePath);
-        final ProjectExtensionKey key = createProjectKey(projectPath, extension);
-        InitializeResult initializeResult = projectToInitResult.get(key);
-        
-        if (initializeResult != null) {
-            return initializeResult.getCapabilities();
-        } else {
-            return NO_CAPABILITIES;
+    public ServerCapabilities getCapabilities(VirtualFile file) {
+        if (file instanceof File) {
+            File resource = (File) file;
+
+            String projectPath = resource.getProject().getPath();
+            String extension = resource.getExtension();
+            final ProjectExtensionKey key = createProjectKey(projectPath, extension);
+            InitializeResult initializeResult = projectToInitResult.get(key);
+
+            if (initializeResult != null) {
+                return initializeResult.getCapabilities();
+            }
         }
+        return NO_CAPABILITIES;
     }
 
-    private String getExtension(String filePath) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    private String getProjectPath(String filePath) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 }
