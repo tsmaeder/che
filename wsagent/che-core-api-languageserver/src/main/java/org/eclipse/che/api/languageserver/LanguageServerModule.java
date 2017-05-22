@@ -12,7 +12,6 @@ package org.eclipse.che.api.languageserver;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
-
 import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
 import org.eclipse.che.api.languageserver.messager.InitializeEventMessenger;
 import org.eclipse.che.api.languageserver.messager.PublishDiagnosticsParamsJsonRpcTransmitter;
@@ -40,6 +39,7 @@ public class LanguageServerModule extends AbstractModule {
         bind(TextDocumentService.class).asEagerSingleton();
         bind(PublishDiagnosticsParamsJsonRpcTransmitter.class).asEagerSingleton();
         bind(ShowMessageJsonRpcTransmitter.class).asEagerSingleton();
+        Multibinder.newSetBinder(binder(), LanguageDescription.class);
 
         bind(LanguageServerInitializationHandler.class).asEagerSingleton();
     }
