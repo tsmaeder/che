@@ -23,6 +23,7 @@ import org.eclipse.che.api.languageserver.service.LanguageRegistryService;
 import org.eclipse.che.api.languageserver.service.LanguageServerInitializationHandler;
 import org.eclipse.che.api.languageserver.service.TextDocumentService;
 import org.eclipse.che.api.languageserver.service.WorkspaceService;
+import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
 
 public class LanguageServerModule extends AbstractModule {
 
