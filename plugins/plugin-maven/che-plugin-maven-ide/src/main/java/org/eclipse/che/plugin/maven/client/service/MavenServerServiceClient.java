@@ -10,12 +10,10 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.maven.client.service;
 
-import com.google.inject.ImplementedBy;
-
-import org.eclipse.che.api.promises.client.Promise;
-import org.eclipse.che.ide.ext.java.shared.dto.Problem;
-
 import java.util.List;
+
+import com.google.inject.ImplementedBy;
+import org.eclipse.che.api.promises.client.Promise;
 
 /**
  * Client for Maven Server API.
@@ -50,11 +48,4 @@ public interface MavenServerServiceClient {
      *         the paths to projects which need to be re-imported maven model
      */
     Promise<Void> reImportProjects(List<String> projectsPaths);
-
-    /**
-     * Invokes reconciling for pom.xml file
-     * @param pomPath tha path to pom.xml file
-     * @return list of problems if any
-     */
-    Promise<List<Problem>> reconcilePom(String pomPath);
 }

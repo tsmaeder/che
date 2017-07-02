@@ -148,14 +148,4 @@ public class MavenServerService {
         return Response.ok().build();
     }
 
-    @GET
-    @Path("pom/reconcile")
-    @ApiOperation(value = "Reconcile pom.xml file")
-    @ApiResponses({@ApiResponse(code = 200, message = "OK")})
-    @Produces("application/json")
-    public List<Problem> reconcilePom(@ApiParam(value = "The paths to pom.xml file which need to be reconciled")
-                                      @QueryParam("pompath") String pomPath)
-            throws ForbiddenException, ConflictException, NotFoundException, ServerException {
-        return pomReconciler.reconcile(pomPath);
-    }
 }

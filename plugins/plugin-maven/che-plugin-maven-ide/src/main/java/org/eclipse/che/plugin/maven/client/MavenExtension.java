@@ -10,34 +10,29 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.maven.client;
 
+import static org.eclipse.che.ide.api.action.IdeActions.GROUP_ASSISTANT;
+import static org.eclipse.che.ide.api.action.IdeActions.GROUP_RIGHT_STATUS_PANEL;
+import static org.eclipse.che.plugin.maven.client.actions.MavenActionsConstants.MAVEN_GROUP_CONTEXT_MENU_ID;
+import static org.eclipse.che.plugin.maven.client.actions.MavenActionsConstants.MAVEN_GROUP_CONTEXT_MENU_NAME;
+
+import java.util.Arrays;
+import java.util.List;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import org.eclipse.che.ide.api.action.ActionManager;
 import org.eclipse.che.ide.api.action.DefaultActionGroup;
 import org.eclipse.che.ide.api.constraints.Constraints;
-import org.eclipse.che.ide.api.editor.EditorRegistry;
 import org.eclipse.che.ide.api.extension.Extension;
-import org.eclipse.che.ide.api.filetypes.FileType;
-import org.eclipse.che.ide.api.filetypes.FileTypeRegistry;
 import org.eclipse.che.ide.api.project.type.wizard.PreSelectedProjectTypeManager;
 import org.eclipse.che.plugin.maven.client.actions.GetEffectivePomAction;
 import org.eclipse.che.plugin.maven.client.actions.ReimportMavenDependenciesAction;
 import org.eclipse.che.plugin.maven.client.comunnication.MavenMessagesHandler;
 import org.eclipse.che.plugin.maven.client.comunnication.progressor.background.DependencyResolverAction;
 import org.eclipse.che.plugin.maven.client.editor.ClassFileSourcesDownloader;
-import org.eclipse.che.plugin.maven.client.editor.PomEditorProvider;
 import org.eclipse.che.plugin.maven.client.project.MavenModelImporter;
 import org.eclipse.che.plugin.maven.client.project.ResolvingMavenProjectStateHolder;
 import org.eclipse.che.plugin.maven.shared.MavenAttributes;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static org.eclipse.che.ide.api.action.IdeActions.GROUP_ASSISTANT;
-import static org.eclipse.che.ide.api.action.IdeActions.GROUP_RIGHT_STATUS_PANEL;
-import static org.eclipse.che.plugin.maven.client.actions.MavenActionsConstants.MAVEN_GROUP_CONTEXT_MENU_ID;
-import static org.eclipse.che.plugin.maven.client.actions.MavenActionsConstants.MAVEN_GROUP_CONTEXT_MENU_NAME;
 
 /**
  * Maven extension entry point.
@@ -101,15 +96,4 @@ public class MavenExtension {
         final DefaultActionGroup rightStatusPanelGroup = (DefaultActionGroup)actionManager.getAction(GROUP_RIGHT_STATUS_PANEL);
         rightStatusPanelGroup.add(dependencyResolverAction);
     }
-
-    @Inject
-    private void registerFileType(FileTypeRegistry fileTypeRegistry,
-                                  MavenResources mavenResources,
-                                  EditorRegistry editorRegistry,
-                                  PomEditorProvider editorProvider) {
-        FileType pomFile = new FileType(mavenResources.maven(), "pom.xml", "pom\\.xml");
-        fileTypeRegistry.registerFileType(pomFile);
-        editorRegistry.register(pomFile, editorProvider);
-    }
-
 }

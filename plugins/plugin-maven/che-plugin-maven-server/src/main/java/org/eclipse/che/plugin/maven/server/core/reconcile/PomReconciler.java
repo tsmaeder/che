@@ -100,37 +100,11 @@ public class PomReconciler {
         eventService.unsubscribe(editorContentUpdateEventSubscriber);
     }
 
-    /**
-     * Handles reconcile operations for pom.xml file by given path.
-     *
-     * @param pomPath
-     *         path to the pom file to reconcile
-     * @return result of reconcile operation as a list of {@link Problem}s
-     * @throws NotFoundException
-     *         if file is not found by given {@code pomPath}
-     * @throws ForbiddenException
-     *         if item is not a file
-     * @throws ServerException
-     *         if other error occurs
-     */
-    public List<Problem> reconcile(String pomPath) throws ServerException, ForbiddenException, NotFoundException {
-        VirtualFileEntry entry = projectManagerProvider.get().getProjectsRoot().getChild(pomPath);
-        if (entry == null) {
-            throw new NotFoundException(format("File '%s' doesn't exist", pomPath));
-        }
-
-        EditorWorkingCopy workingCopy = editorWorkingCopyManager.getWorkingCopy(pomPath);
-        String pomContent = workingCopy != null ? workingCopy.getContentAsString() : entry.getVirtualFile().getContentAsString();
-        String projectPath = entry.getPath().getParent().toString();
-
-        return reconcile(pomPath, projectPath, pomContent);
-    }
-
-    private List<Problem> reconcile(String pomPath, String projectPath, String pomContent) throws ServerException, NotFoundException {
+    public List<Problem> reconcile(String pomUri, String projectPath, String pomContent) throws ServerException, NotFoundException {
         List<Problem> result = new ArrayList<>();
 
         if (isNullOrEmpty(pomContent)) {
-            throw new ServerException(format("Couldn't reconcile pom file '%s' because its content is empty", pomPath));
+            throw new ServerException(format("Couldn't reconcile pom file '%s' because its content is empty", pomUri));
         }
 
         try {
@@ -161,12 +135,12 @@ public class PomReconciler {
                 result.add(createProblem(pomContent, (SAXParseException)cause));
 
             } else {
-                String error = format("Couldn't reconcile pom file '%s', the reason is '%s'", pomPath, exception.getLocalizedMessage());
+                String error = format("Couldn't reconcile pom file '%s', the reason is '%s'", pomUri, exception.getLocalizedMessage());
                 LOG.error(error, exception);
                 throw new ServerException(error);
             }
         } catch (IOException e) {
-            String error = format("Couldn't reconcile pom file '%s', the reason is '%s'", pomPath, e.getLocalizedMessage());
+            String error = format("Couldn't reconcile pom file '%s', the reason is '%s'", pomUri, e.getLocalizedMessage());
             LOG.error(error, e);
             throw new ServerException(error);
         }

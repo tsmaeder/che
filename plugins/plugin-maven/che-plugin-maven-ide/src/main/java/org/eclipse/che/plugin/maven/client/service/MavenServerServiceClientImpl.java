@@ -10,22 +10,20 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.maven.client.service;
 
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import com.google.gwt.http.client.Response;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.commons.exception.UnmarshallerException;
-import org.eclipse.che.ide.ext.java.shared.dto.Problem;
 import org.eclipse.che.ide.rest.AsyncRequestFactory;
-import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.rest.StringUnmarshaller;
 import org.eclipse.che.ide.rest.Unmarshallable;
 import org.eclipse.che.ide.ui.loaders.request.LoaderFactory;
-
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * Implementation for {@link MavenServerServiceClient}.
@@ -38,18 +36,15 @@ public class MavenServerServiceClientImpl implements MavenServerServiceClient {
     private final AppContext          appContext;
     private final LoaderFactory       loaderFactory;
     private final AsyncRequestFactory asyncRequestFactory;
-    private final DtoUnmarshallerFactory dtoUnmarshallerFactory;
 
 
     @Inject
     public MavenServerServiceClientImpl(AppContext appContext,
                                         LoaderFactory loaderFactory,
-                                        AsyncRequestFactory asyncRequestFactory,
-                                        DtoUnmarshallerFactory dtoUnmarshallerFactory) {
+                                        AsyncRequestFactory asyncRequestFactory) {
         this.appContext = appContext;
         this.loaderFactory = loaderFactory;
         this.asyncRequestFactory = asyncRequestFactory;
-        this.dtoUnmarshallerFactory = dtoUnmarshallerFactory;
         this.servicePath = "/maven/server/";
     }
 
@@ -92,13 +87,5 @@ public class MavenServerServiceClientImpl implements MavenServerServiceClient {
                            queryParameters.toString().replaceFirst("&", "?");
 
         return asyncRequestFactory.createPostRequest(url, null).send();
-    }
-
-    @Override
-    public Promise<List<Problem>> reconcilePom(String pomPath) {
-        final String url = appContext.getDevMachine().getWsAgentBaseUrl() + servicePath + "pom/reconcile?pompath=" + pomPath;
-        Unmarshallable<List<Problem>> unmarshallable = dtoUnmarshallerFactory.newListUnmarshaller(Problem.class);
-        return asyncRequestFactory.createGetRequest(url)
-                                  .send(unmarshallable);
     }
 }

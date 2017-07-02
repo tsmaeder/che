@@ -10,15 +10,21 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.maven.server.inject;
 
+import static com.google.inject.multibindings.Multibinder.newSetBinder;
+
+import java.util.Collections;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-
+import org.eclipse.che.api.languageserver.launcher.LanguageServerLauncher;
+import org.eclipse.che.api.languageserver.shared.model.LanguageDescription;
 import org.eclipse.che.api.project.server.handlers.ProjectHandler;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.api.project.server.type.ValueProviderFactory;
 import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.maven.server.MavenTerminal;
+import org.eclipse.che.plugin.maven.lsp.MavenLanguageServerLauncher;
 import org.eclipse.che.plugin.maven.server.PomModificationDetector;
 import org.eclipse.che.plugin.maven.server.core.MavenProgressNotifier;
 import org.eclipse.che.plugin.maven.server.core.MavenServerNotifier;
@@ -32,8 +38,6 @@ import org.eclipse.che.plugin.maven.server.projecttype.handler.MavenProjectGener
 import org.eclipse.che.plugin.maven.server.projecttype.handler.MavenProjectInitHandler;
 import org.eclipse.che.plugin.maven.server.projecttype.handler.SimpleGeneratorStrategy;
 import org.eclipse.che.plugin.maven.server.rest.MavenServerService;
-
-import static com.google.inject.multibindings.Multibinder.newSetBinder;
 
 /** @author Artem Zatsarynnyi */
 @DynaModule
@@ -63,5 +67,13 @@ public class MavenModule extends AbstractModule {
 
         bind(PomChangeListener.class).asEagerSingleton();
         bind(PomModificationDetector.class).asEagerSingleton();
+        Multibinder.newSetBinder(binder(), LanguageServerLauncher.class).addBinding().to(MavenLanguageServerLauncher.class);
+        
+        LanguageDescription description = new LanguageDescription();
+        description.setLanguageId("pom");
+        description.setMimeType("application/pom");
+        description.setFileNames(Collections.singletonList("pom.xml"));
+        Multibinder.newSetBinder(binder(), LanguageDescription.class).addBinding().toInstance(description);
+
     }
 }

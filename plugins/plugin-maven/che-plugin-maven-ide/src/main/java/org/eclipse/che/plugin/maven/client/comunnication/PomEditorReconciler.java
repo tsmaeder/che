@@ -10,22 +10,21 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.maven.client.comunnication;
 
-import com.google.gwt.user.client.Timer;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import org.eclipse.che.ide.api.editor.EditorAgent;
-import org.eclipse.che.ide.api.editor.EditorPartPresenter;
-import org.eclipse.che.ide.api.editor.reconciler.Reconciler;
-import org.eclipse.che.ide.api.editor.reconciler.ReconcilingStrategy;
-import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
-import org.eclipse.che.plugin.maven.client.editor.PomReconcilingStrategy;
+import static org.eclipse.che.ide.api.editor.partition.DocumentPartitioner.DEFAULT_CONTENT_TYPE;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.eclipse.che.ide.api.editor.partition.DocumentPartitioner.DEFAULT_CONTENT_TYPE;
+import com.google.gwt.user.client.Timer;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import org.eclipse.che.ide.api.editor.EditorAgent;
+import org.eclipse.che.ide.api.editor.EditorPartPresenter;
+import org.eclipse.che.ide.api.editor.reconciler.Reconciler;
+import org.eclipse.che.ide.api.editor.reconciler.ReconcilingStrategy;
+import org.eclipse.che.ide.api.editor.texteditor.TextEditor;
+import org.eclipse.che.plugin.languageserver.ide.editor.LanguageServerReconcileStrategy;
 
 /**
  * @author Evgen Vidolob
@@ -54,8 +53,8 @@ public class PomEditorReconciler {
                             final Reconciler reconciler = ((TextEditor)openedEditor).getConfiguration().getReconciler();
                             if (reconciler != null) {
                                 final ReconcilingStrategy strategy = reconciler.getReconcilingStrategy(DEFAULT_CONTENT_TYPE);
-                                if (strategy instanceof PomReconcilingStrategy) {
-                                    ((PomReconcilingStrategy)strategy).doReconcile();
+                                if (strategy instanceof LanguageServerReconcileStrategy) {
+                                    ((LanguageServerReconcileStrategy)strategy).doReconcile();
                                 }
                             }
                         }
