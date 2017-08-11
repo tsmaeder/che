@@ -10,13 +10,14 @@
  *******************************************************************************/
 package org.eclipse.che.api.deploy;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
+import static com.google.inject.matcher.Matchers.subclassesOf;
+import static org.eclipse.che.inject.Matchers.names;
+
+import javax.sql.DataSource;
 
 import org.eclipse.che.api.agent.GitCredentialsAgent;
 import org.eclipse.che.api.agent.LSCSharpAgent;
+import org.eclipse.che.api.agent.LSJavaAgent;
 import org.eclipse.che.api.agent.LSJsonAgent;
 import org.eclipse.che.api.agent.LSPhpAgent;
 import org.eclipse.che.api.agent.LSPythonAgent;
@@ -47,10 +48,10 @@ import org.eclipse.che.inject.DynaModule;
 import org.eclipse.che.plugin.github.factory.resolver.GithubFactoryParametersResolver;
 import org.flywaydb.core.internal.util.PlaceholderReplacer;
 
-import javax.sql.DataSource;
-
-import static com.google.inject.matcher.Matchers.subclassesOf;
-import static org.eclipse.che.inject.Matchers.names;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 /** @author andrew00x */
 @DynaModule
@@ -155,6 +156,7 @@ public class WsMasterModule extends AbstractModule {
         agents.addBinding().to(WsAgent.class);
         agents.addBinding().to(LSPhpAgent.class);
         agents.addBinding().to(LSPythonAgent.class);
+        agents.addBinding().to(LSJavaAgent.class);
         agents.addBinding().to(LSJsonAgent.class);
         agents.addBinding().to(LSCSharpAgent.class);
         agents.addBinding().to(LSTypeScriptAgent.class);
