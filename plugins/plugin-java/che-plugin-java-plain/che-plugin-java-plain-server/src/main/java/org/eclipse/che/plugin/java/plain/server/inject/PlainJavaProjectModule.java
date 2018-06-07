@@ -16,8 +16,8 @@ import com.google.inject.AbstractModule;
 import org.eclipse.che.api.project.server.handlers.ProjectHandler;
 import org.eclipse.che.api.project.server.type.ProjectTypeDef;
 import org.eclipse.che.inject.DynaModule;
-import org.eclipse.che.plugin.java.plain.server.generator.PlainJavaProjectGenerator;
 import org.eclipse.che.plugin.java.plain.server.projecttype.PlainJavaInitHandler;
+import org.eclipse.che.plugin.java.plain.server.projecttype.PlainJavaProjectGenerator;
 import org.eclipse.che.plugin.java.plain.server.projecttype.PlainJavaProjectType;
 import org.eclipse.che.plugin.java.plain.server.rest.ClasspathUpdaterService;
 

@@ -22,7 +22,6 @@ import org.eclipse.che.api.core.NotFoundException;
 import org.eclipse.che.api.core.ServerException;
 import org.eclipse.che.api.core.notification.EventService;
 import org.eclipse.che.api.project.server.ProjectManager;
-import org.eclipse.che.api.project.server.notification.ProjectUpdatedEvent;
 import org.eclipse.che.api.project.shared.RegisteredProject;
 import org.eclipse.che.api.workspace.server.model.impl.ProjectConfigImpl;
 import org.eclipse.che.api.workspace.server.model.impl.SourceStorageImpl;
@@ -77,7 +76,6 @@ public class ProjectsSynchronizer {
     projectConfig.setName(projectPath.substring(projectPath.lastIndexOf("/") + 1));
     try {
       projectManager.update(projectConfig);
-      eventService.publish(new ProjectUpdatedEvent(projectPath));
     } catch (ConflictException
         | ForbiddenException
         | NotFoundException
