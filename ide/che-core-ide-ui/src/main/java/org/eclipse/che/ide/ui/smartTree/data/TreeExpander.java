@@ -21,8 +21,12 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface TreeExpander {
 
-  /** Perform tree expand in case if {@link #isExpandEnabled()} returns {@code true}. */
-  void expandTree();
+  /**
+   * Perform tree expand in case if {@link #isExpandEnabled()} returns {@code true}.
+   *
+   * @param forceRefresh force a refresh of the underlying tree data structure
+   */
+  void expandTree(boolean forceRefresh);
 
   /**
    * Returns {@code true} in case if tree expand is possible.

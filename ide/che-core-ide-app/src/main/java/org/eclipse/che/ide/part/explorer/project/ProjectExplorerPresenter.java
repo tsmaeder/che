@@ -271,7 +271,7 @@ public class ProjectExplorerPresenter extends BasePresenter
 
   private void doExpand() {
     if (treeExpander.isExpandEnabled()) {
-      treeExpander.expandTree();
+      treeExpander.expandTree(true);
     }
   }
 

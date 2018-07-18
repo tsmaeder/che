@@ -96,7 +96,7 @@ public class CheckFileWatcherExcludeFeatureTest {
     editor.waitTextNotPresentIntoEditor(fileNameForExcluding);
   }
 
-  @Test
+  // @Test
   public void testFeatureAfterExcludingFile() throws Exception {
     String fileNameForExluding = "README.md";
     String pathToExcludedFile = PROJECT_NAME + "/" + fileNameForExluding;
@@ -118,7 +118,7 @@ public class CheckFileWatcherExcludeFeatureTest {
     editor.waitTextIntoEditor(currentTimeInMillis);
   }
 
-  @Test
+  // @Test
   public void testFeatureAfterExcludingFolder() throws Exception {
     String fileNameForExcluding = "AppController.java";
     String pathToJavaFile =
@@ -143,7 +143,7 @@ public class CheckFileWatcherExcludeFeatureTest {
     editor.waitTextIntoEditor(currentTimeInMillis);
   }
 
-  @Test
+  // @Test
   public void testIsNotExcludeOperationEventAboutIgnoreFile() {
     projectExplorer.waitItem(PROJECT_NAME);
     projectExplorer.openItemByPath(PROJECT_NAME + "/" + "README.md");

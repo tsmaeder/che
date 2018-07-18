@@ -41,7 +41,7 @@ public abstract class ExpandTreeAction extends BaseAction {
       return;
     }
 
-    treeExpander.expandTree();
+    treeExpander.expandTree(false);
   }
 
   @Override

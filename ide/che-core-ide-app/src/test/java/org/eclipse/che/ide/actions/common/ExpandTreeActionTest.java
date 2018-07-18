@@ -57,7 +57,7 @@ public class ExpandTreeActionTest {
 
     action.actionPerformed(actionEvent);
 
-    verify(treeExpander, never()).expandTree();
+    verify(treeExpander, never()).expandTree(false);
   }
 
   @Test
@@ -66,7 +66,7 @@ public class ExpandTreeActionTest {
 
     action.actionPerformed(actionEvent);
 
-    verify(treeExpander).expandTree();
+    verify(treeExpander).expandTree(false);
   }
 
   @Test

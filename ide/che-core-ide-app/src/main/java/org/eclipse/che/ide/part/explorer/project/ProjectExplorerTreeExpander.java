@@ -42,11 +42,11 @@ final class ProjectExplorerTreeExpander implements TreeExpander {
     this.appContext = appContext;
   }
 
-  private final boolean[] everExpanded = new boolean[] {false};
+  private boolean everExpanded = false;
 
   @Override
-  public void expandTree() {
-    if (everExpanded[0]) {
+  public void expandTree(boolean forceRefresh) {
+    if (!forceRefresh && everExpanded) {
       tree.expandAll();
 
       return;
@@ -59,7 +59,7 @@ final class ProjectExplorerTreeExpander implements TreeExpander {
             new Operation<Resource[]>() {
               @Override
               public void apply(Resource[] ignored) throws OperationException {
-                everExpanded[0] = true;
+                everExpanded = true;
 
                 tree.expandAll();
               }
